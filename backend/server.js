@@ -6,7 +6,7 @@ const connectDB = require('./config/db')
 const port = process.env.PORT || 5000
 
 /// connect to MongoDB
-//connectDB() // tạm thời chưa tạo database
+connectDB()
 
 const app = express()
 
