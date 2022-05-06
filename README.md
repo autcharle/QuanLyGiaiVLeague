@@ -3,7 +3,7 @@
 
 Final Project of Group 11_Introducing to Software Engineering
 
-Hướng dẫn:
+Hướng dẫn lần đầu:
 
 - 1_ Lập trình trên Visual Studio Code
 
@@ -20,3 +20,5 @@ Hướng dẫn:
 - 7_ Install packages từ yarn: gõ lệnh "yarn" trên terminal (packages cho frontend)
 
 - 8_ Đổi tên file "dotenv" -> ".env" (Chú ý khi commit đổi lại ".env" -> "dotenv" để tránh trường hợp file này bị xóa)
+
+- 9_ Run server and client: gõ lệnh "npm run dev" tại thư mục gốc của project (QuanLyGiaiVLeague)
