@@ -19,6 +19,6 @@ Hướng dẫn lần đầu:
 
 - 7_ Install packages từ yarn: gõ lệnh "yarn" trên terminal (packages cho frontend)
 
-- 8_ Đổi tên file "dotenv" -> ".env" (Chú ý khi commit đổi lại ".env" -> "dotenv" để tránh trường hợp file này bị xóa)
+- 8_ Đổi tên file "dotenv" -> ".env" (Chú ý khi commit đổi lại ".env" -> "dotenv" vì khi push code lên git, git sẽ bỏ qua file .env, do mình cài đặt trong file .gitignore để ignore file .env)
 
 - 9_ Run server and client: gõ lệnh "npm run dev" tại thư mục gốc của project (QuanLyGiaiVLeague)
