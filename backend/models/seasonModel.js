@@ -39,8 +39,18 @@ const seasonSchema = mongoose.Schema({
         type: Number,
         default: 96
     },
+    play_duration:{
+        type: Number,
+        default: 96
+    },
+    start_date:{
+        type: Date,
+    },
+    end_date: {
+        type: Date,
+    },
 }, {
     timestamps: true,
 })
 
-module.exports = mongoose.model('season', seasonSchema)
+module.exports = mongoose.model('Season', seasonSchema)

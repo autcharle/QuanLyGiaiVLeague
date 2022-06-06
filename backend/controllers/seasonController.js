@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const asyncHandler = require("express-async-handler");
-const Season = require("../models/SeasonModel");
+const Season = require("../models/seasonModel");
 
 // @desc    Create new season
 // @route   POST /api/season
@@ -36,6 +36,8 @@ const createSeason = asyncHandler(async (req, res) => {
       max_age: req.body.max_age || 40,
     },
     play_duration: req.body.play_duration || 96,
+    start_date:  Date.parse(req.body.start_date) || null,
+    end_date: Date.parse(req.body.end_date) || null
   });
   res.status(200).json(season);
 });
@@ -96,6 +98,8 @@ const updateSeason = asyncHandler(async (req, res) => {
       max_age: req.body.max_age || season.age.max_age,
     },
     play_duration: req.body.play_duration || season.play_duration,
+    start_date:  Date.parse(req.body.start_date) || season.start_date,
+    end_date: Date.parse(req.body.end_date) || season.end_date,
   }
   const updatedSeason = await Season.findByIdAndUpdate(req.params.id, updateValue, {
     new: true,
