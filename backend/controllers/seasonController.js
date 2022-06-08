@@ -11,6 +11,7 @@ const createSeason = asyncHandler(async (req, res) => {
   //   res.status(400);
   //   throw new Error("Please add a text field");
   // }
+  console.log(req.body)
   const name = req.body.name || "Vleague " + new Date().getFullYear().toString();
   const seasonExist = await Season.findOne({ name });
   if (seasonExist) {
@@ -37,7 +38,24 @@ const createSeason = asyncHandler(async (req, res) => {
     },
     play_duration: req.body.play_duration || 96,
     start_date:  Date.parse(req.body.start_date) || null,
-    end_date: Date.parse(req.body.end_date) || null
+    end_date: Date.parse(req.body.end_date) || null,
+    win_point: req.body.win_point || 3,
+    draw_point: req.body.draw_point || 1,
+    lose_point: req.body.lose_point || 0,
+    goal_difference_rank: req.body.goal_difference_rank || 1,
+    point_rank: req.body.point_rank || 2,
+    win_rank: req.body.win_rank || 3,
+    draw_rank: req.body.draw_rank || 4,
+    lose_rank: req.body.lose_rank || 5,
+    goal_type: req.body.goal_type || [
+      A,
+      B,
+      C,
+    ],
+    player_type:req.body.player_type || [
+      native,
+      foreign
+    ],
   });
   res.status(200).json(season);
 });
@@ -53,12 +71,6 @@ const getSeason = asyncHandler(async (req, res) => {
 // @route   GET /api/seasons/:id
 // @access  Public
 const getASeason = asyncHandler(async (req, res) => {
-  // if (!req.params.id) {
-  //   res.status(400);
-  //   throw new Error("missng id");
-  // }
-  // const seasons = await Season.find({name :  { $regex: '.*' + req.body.name + '.*' }});
-
   res.status(200).json(await Season.findById(req.params.id));
 });
 // @desc    find seasons
@@ -70,7 +82,6 @@ const findSeason = asyncHandler(async (req, res) => {
     throw new Error("Please enter name field");
   }
   const seasons = await Season.find({name :  { $regex: '.*' + req.body.name + '.*' }});
-
   res.status(200).json(seasons);
 });
 // @desc    Update season
@@ -100,6 +111,16 @@ const updateSeason = asyncHandler(async (req, res) => {
     play_duration: req.body.play_duration || season.play_duration,
     start_date:  Date.parse(req.body.start_date) || season.start_date,
     end_date: Date.parse(req.body.end_date) || season.end_date,
+    win_point: req.body.win_point || season.win_point,
+    draw_point: req.body.draw_point || season.draw_point,
+    lose_point: req.body.lose_point || season.lose_point,
+    goal_difference_rank: req.body.goal_difference_rank || season.goal_difference_rank,
+    point_rank: req.body.point_rank || season.point_rank ,
+    win_rank: req.body.win_rank || season.win_rank,
+    draw_rank: req.body.draw_rank || season.draw_rank,
+    lose_rank: req.body.lose_rank || season.lose_rank,
+    goal_type: req.body.goal_type || season.goal_type,
+    player_type:req.body.player_type || season.player_type,
   }
   const updatedSeason = await Season.findByIdAndUpdate(req.params.id, updateValue, {
     new: true,

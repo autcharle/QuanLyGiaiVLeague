@@ -73,6 +73,39 @@ const loginUser = asyncHandler(async (req, res) => {
         throw new Error('Invalid credentials')
     }
 })
+// @desc    Get users data
+// @route   GET /api/users
+// @access  Private
+const getAllUser = asyncHandler(async (req, res) => {
+    if (req.user.role !== 'admin' && req.user.status === 'active'){
+        res.status(400)
+        throw new Error('need to be admin')
+    }
+    const users = await User.find()
+    res.status(200).json(users)
+})
+// @desc    udpate user data
+// @route   PUT /api/users/:id
+// @access  Private
+const UpdateUserAdmin = asyncHandler(async (req, res) => {
+    if (req.user.role !== 'admin' && req.user.status === 'active'){
+        res.status(400)
+        throw new Error('need to be admin')
+    }
+    const userExists = await User.findById(req.params.id)
+    if(!userExists){
+        res.status(400)
+        throw new Error('User not exists')
+    }
+    if(!req.body.status){
+        res.status(400)
+        throw new Error('please enter field')
+    }
+    const updatedItem = await User.findByIdAndUpdate(req.params.id, {status: req.body.status}, {
+        new: true,
+      });
+    res.status(200).json(updatedItem)
+})
 
 // @desc    Get user data
 // @route   GET /api/users/me
@@ -93,4 +126,6 @@ module.exports = {
     registerUser,
     loginUser,
     getMe,
+    getAllUser,
+    UpdateUserAdmin,
 }

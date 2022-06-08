@@ -18,6 +18,12 @@ const userSchema = mongoose.Schema({
         type: String,
         enum:['manager','admin'],
         required: true,
+    },
+    status: {
+        type: String,
+        enum:['active','inactive'],
+        default:'inactive',
+        required: true,
     }
 }, {
     timestamps: true,

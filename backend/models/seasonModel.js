@@ -49,6 +49,47 @@ const seasonSchema = mongoose.Schema({
     end_date: {
         type: Date,
     },
+    win_point:{
+        type: Number,
+        default: 3
+    },
+    draw_point:{
+        type: Number,
+        default:1
+    },
+    lose_point:{
+        type: Number,
+        default: 0
+    }, 
+    goal_difference_rank :
+    {
+        type: Number,
+        default: 1,
+    },  
+    point_rank:{
+        type: Number,
+        default: 2,
+    },
+    win_rank:{
+        type: Number,
+        default: 3,
+    },
+    draw_rank: {
+        type: Number,
+        default: 4,
+    },
+    lose_rank: {
+        type: Number,
+        default: 5,
+    },   
+    goal_type:{
+        type: [String],
+        default: ['A','B','C']
+    },
+    player_type:{
+        type: [String],
+        default: ['native','foreign']
+    }
 }, {
     timestamps: true,
 })
