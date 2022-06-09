@@ -13,7 +13,7 @@ const clubSchema = mongoose.Schema({
     stadium:{
         type: String,
         required: [true, 'Please add a stadium']
-    }
+    },
 }, {
     timestamps: true,
 })

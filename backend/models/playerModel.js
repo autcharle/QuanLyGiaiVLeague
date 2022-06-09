@@ -16,12 +16,21 @@ const playerSchema = mongoose.Schema({
     },
     note: {
         type: String,
+        default: '',
     },
     type: {
         type: String,
+        enum: ['native','foreign'],
+        require:  [true, 'Please add a player type'],
     },
+    // status: {
+    //     type: String,
+    //     enum:['active','inactive'],
+    //     default:'active',
+    //     required: true,
+    // }
 }, {
     timestamps: true,
 })
 
-module.exports = mongoose.model('Player', userSchema)
+module.exports = mongoose.model('Player', playerSchema)

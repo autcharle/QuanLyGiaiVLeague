@@ -17,6 +17,7 @@ app.use(express.urlencoded({ extended: false }))
 app.use('/api/users', require('./routes/userRoutes'))
 app.use('/api/seasons', require('./routes/seasonRoutes'))
 app.use('/api/clubs', require('./routes/clubRoutes'))
+app.use('/api/players', require('./routes/playerRoutes'))
 /// } end API section
 
 app.use(errorHandler)

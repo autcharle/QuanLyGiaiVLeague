@@ -36,4 +36,4 @@ const matchSchema = mongoose.Schema({
     timestamps: true,
 })
 
-module.exports = mongoose.model('Match', userSchema)
+module.exports = mongoose.model('Match', matchSchema)

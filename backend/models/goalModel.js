@@ -28,4 +28,4 @@ const goalSchema = mongoose.Schema({
     timestamps: true,
 })
 
-module.exports = mongoose.model('Goal', userSchema)
+module.exports = mongoose.model('Goal', goalSchema)

@@ -41,4 +41,4 @@ const rankingSchema = mongoose.Schema({
     timestamps: true,
 })
 
-module.exports = mongoose.model('Ranking', userSchema)
+module.exports = mongoose.model('Ranking', rankingSchema)

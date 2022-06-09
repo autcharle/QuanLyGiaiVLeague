@@ -86,10 +86,10 @@ const seasonSchema = mongoose.Schema({
         type: [String],
         default: ['A','B','C']
     },
-    player_type:{
-        type: [String],
-        default: ['native','foreign']
-    }
+    // player_type:{
+    //     type: [String],
+    //     default: ['native','foreign']
+    // }
 }, {
     timestamps: true,
 })
