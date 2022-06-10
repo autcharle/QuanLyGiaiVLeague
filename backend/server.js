@@ -18,6 +18,7 @@ app.use('/api/users', require('./routes/userRoutes'))
 app.use('/api/seasons', require('./routes/seasonRoutes'))
 app.use('/api/clubs', require('./routes/clubRoutes'))
 app.use('/api/players', require('./routes/playerRoutes'))
+app.use('/api/rankings', require('./routes/rankingRoutes'))
 /// } end API section
 
 app.use(errorHandler)

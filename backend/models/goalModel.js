@@ -6,15 +6,20 @@ const goalSchema = mongoose.Schema({
         required:[true, 'please add player'],
         ref: 'Player',
     },
+    club:{
+        type: mongoose.Schema.Types.ObjectId,
+        required:[true, 'please add player'],
+        ref: 'Club',
+    },
     match:{
         type: mongoose.Schema.Types.ObjectId,
         required:[true, 'please add player'],
         ref: 'Match',
     },
-    club:{
+    season:{
         type: mongoose.Schema.Types.ObjectId,
         required:[true, 'please add player'],
-        ref: 'Club',
+        ref: 'Season',
     },
     goal_minute:{
         type: Number,
