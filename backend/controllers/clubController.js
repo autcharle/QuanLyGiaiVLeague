@@ -19,7 +19,6 @@ const createClub = asyncHandler(async (req, res) => {
       { stadium: { $regex: ".*" + stadium + ".*" } },
     ],
   });
-  console.log(existedClubs.length)
   if (existedClubs.length != 0) {
     // res.status(400);
     // throw new Error("Already created for this season");

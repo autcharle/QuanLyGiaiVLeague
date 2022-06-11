@@ -9,102 +9,126 @@ const Club = require("../models/clubModel");
 const Player = require("../models/playerModel");
 
 // @desc    Create new ranking
-// @route   POST /api/rankings
+// @route   POST /api/rankings/
 // @access  Public
 const createRanking = asyncHandler(async (req, res) => {
-  const {club , season }  = req.body;
+  // Check input
+  const { club, season } = req.body;
   if (!club || !season) {
     res.status(400);
     throw new Error("Please add a text field");
   }
+
+  // Check existence
+  // Check existence
   const existedRankings = await Ranking.find({
+    $and: [
+      { club: new mongoose.Types.ObjectId(club) },
+      { season: new mongoose.Types.ObjectId(season) },
+    ],
   });
-  console.log(existedRankings.length);
   if (existedRankings.length != 0) {
     // res.status(400);
     // throw new Error("Already created for this season");
     res.status(400).json({
-      message: "manager or name or stadium existed in other ranking",
+      message: "club is already join this season",
       existedRankings,
     });
     return;
   }
+  // Check valid:
+  const validate = await ValidateClub(season, club);
+  const isValid = validate.isValid;
+  if (!isValid) {
+    res.status(400);
+    throw new Error("Club is not valid");
+  }
+
+  // create
   const ranking = await Ranking.create({
-    user: user,
-    name: name,
-    stadium: stadium,
+    club: club,
+    season: season,
   });
 
   res.status(200).json({ ranking });
 });
 
-// @desc    Get rankings
-// @route   GET /api/rankings
+// @desc    Create new ranking of a season
+// @route   POST /api/rankings/:seasonId
 // @access  Public
-const getRankings = asyncHandler(async (req, res) => {
-  const rankings = await Ranking.find();
+const createRankingForASeason = asyncHandler(async (req, res) => {
+  const club = req.body.club;
+  const season = req.params.seasonId;
+
+  // Check input
+  if (!club) {
+    res.status(400);
+    throw new Error("Please add a text field a");
+  }
+
+  // Check existence
+  const existedRankings = await Ranking.find({
+    $and: [
+      { club: new mongoose.Types.ObjectId(club) },
+      { season: new mongoose.Types.ObjectId(season) },
+    ],
+  });
+  if (existedRankings.length != 0) {
+    // res.status(400);
+    // throw new Error("Already created for this season");
+    res.status(400).json({
+      message: "club is already join this season",
+      existedRankings,
+    });
+    return;
+  }
+  // Check valid:
+  const validate = await ValidateClub(season, club);
+  const isValid = validate.isValid;
+  if (!isValid) {
+    res.status(400);
+    throw new Error("Club is not valid");
+  }
+  // Create
+  const ranking = await Ranking.create({
+    club: club,
+    season: season,
+  });
+
+  res.status(200).json({ ranking });
+});
+
+// @desc    Get rankings of a season
+// @route   GET /api/rankings/:seasonId
+// @access  Public
+const getRankingOfASeason = asyncHandler(async (req, res) => {
+  const rankings = await Ranking.find({ season: req.params.seasonId }).sort('rank');
   res.status(200).json(rankings);
 });
 
-// @desc    Get Rankings
-// @route   GET /api/ranking/:id
-// @access  Public
-const getARanking = asyncHandler(async (req, res) => {
-  if (!req.params.id) {
-    res.status(400);
-    throw new Error("missng id");
-  }
-
-  res.status(200).json(await Ranking.findById(req.params.id));
-});
 // @desc    find rankings
 // @route   POST /api/rankings/search
 // @access  Public
 const findRankings = asyncHandler(async (req, res) => {
-  const { user, name, stadium } = req.body;
-  if (!user || !name || !stadium) {
+  const { club, season } = req.body;
+  if (!club && !season) {
     res.status(400);
     throw new Error("Please add a text field");
   }
+  // Check existence
   const existedRankings = await Ranking.find({
     $or: [
-      { name: { $regex: ".*" + name + ".*" } },
-      { user: { _id: user } },
-      { stadium: { $regex: ".*" + stadium + ".*" } },
+      { club: new mongoose.Types.ObjectId(club) },
+      { season: new mongoose.Types.ObjectId(season) },
     ],
   });
   res.status(200).json(existedRankings);
 });
-// << X >>
-// @desc    Update ranking
-// @route   PUT /api/seasons:id
-// @access  Public
-const updateRanking = asyncHandler(async (req, res) => {
-  const ranking = await Ranking.findById(req.params.id);
 
-  if (!ranking) {
-    res.status(400);
-    throw new Error("Ranking not existed");
-  }
-
-  const updateValue = {
-    user: req.body.user || ranking.user,
-    name: req.body.name || ranking.name,
-    stadium: req.body.stadium || ranking.stadium,
-  };
-  const updatedItem = await Ranking.findByIdAndUpdate(
-    req.params.id,
-    updateValue,
-    {
-      new: true,
-    }
-  );
-  res.status(200).json({ msg: "updateRanking", updatedItem });
-});
-// @desc    Delete season
+// @desc    Delete a ranking for a club of a seasons
 // @route   DELETE /api/seasons:id
 // @access  Public
-const deleteRanking = asyncHandler(async (req, res) => {
+const deleteAClubRanking = asyncHandler(async (req, res) => {
   const ranking = await Ranking.findById(req.params.id);
   if (!ranking) {
     res.status(400);
@@ -119,6 +143,12 @@ const deleteRanking = asyncHandler(async (req, res) => {
 // @route   POST /api/rankings/register/:seasonId/:clubId"
 // @access  Public
 const getValidatePlayer = asyncHandler(async (req, res) => {
+  const season = await Season.findById(req.params.seasonId);
+  const clubs = await Club.findById(req.params.clubId);
+  if (!season || !clubs) {
+    res.status(400);
+    throw new Error("Not existed season or clubs");
+  }
   res
     .status(200)
     .json(await ValidatePlayerInClub(req.params.seasonId, req.params.clubId));
@@ -128,7 +158,12 @@ const getValidatePlayer = asyncHandler(async (req, res) => {
 // @route   POST /api/seasons:id
 // @access  Public
 const getValidate = asyncHandler(async (req, res) => {
-  res.status(200).json(await Validate(req.params.id));
+  const season = await Season.findById(req.params.seasonId);
+  if (!season) {
+    res.status(400);
+    throw new Error("Not existed seasonpty ID");
+  }
+  res.status(200).json(await Validate(req.params.seasonId));
 });
 
 // ---- Helper Funciton {
@@ -139,9 +174,12 @@ const getValidate = asyncHandler(async (req, res) => {
 const Validate = asyncHandler(async (seasonID) => {
   const season = await Season.findById(seasonID);
   const clubs = await Club.find();
+  if (!season) {
+    throw new Error("Empty Season ID");
+  }
   let list = [];
-  for(let i = 0; i < clubs.length;i++){
-    const item = await ValidateClub(seasonID,clubs[i])
+  for (let i = 0; i < clubs.length; i++) {
+    const item = await ValidateClub(seasonID, clubs[i]);
     /*
     //   c = clubs[i]
     //   let player = await ValidatePlayerInClub(seasonID, c._id);
@@ -186,7 +224,7 @@ const Validate = asyncHandler(async (seasonID) => {
 
 // @desc    Create validate table of player in a precific club and season
 // para:    Season Id, clubID
-// return   json list of player with model attr and add attr age,isValid 
+// return   json list of player with model attr and add attr age,isValid
 const ValidatePlayerInClub = asyncHandler(async (seasonID, clubID) => {
   const season = await Season.findById(seasonID);
   const players = await Player.aggregate([
@@ -223,51 +261,48 @@ const ValidatePlayerInClub = asyncHandler(async (seasonID, clubID) => {
 // para:    Season Id, clubID
 // return   josn : a club's (id, name), number of valid player and valid foreign player, valid and invalid players and isValid
 const ValidateClub = asyncHandler(async (seasonID, clubID) => {
-    const season = await Season.findById(seasonID);
-    c = await Club.findById(clubID)
-    let player = await ValidatePlayerInClub(seasonID, c._id);
-    let valid = player.filter((p) => {
-      return p.isValid === true;
-    });
-    let invalid = player.filter((p) => {
-      return p.isValid === false;
-    });
-    let foreign = valid.filter((key) => key.type == "foreign").length;
-
-    let InValidReason = [];
-    if (
-      valid.length < season.min_player ||
-      valid.length > season.max_player
-    ) {
-      InValidReason.push("Invalid number of valid player");
-    }
-    if (
-      foreign < season.min_foreign_player ||
-      foreign > season.max_foreign_player
-    ) {
-      InValidReason.push("Invalid number of foreign player");
-    }
-    let isValid = InValidReason.length == 0 ? true : false;
-    const item = {
-      clubID: c._id,
-      clubName: c.name,
-      numberOfValidPlayer: valid.length,
-      foreign,
-      valid,
-      invalid,
-      isValid,
-    };
-    return item;
+  const season = await Season.findById(seasonID);
+  c = await Club.findById(clubID);
+  let player = await ValidatePlayerInClub(seasonID, c._id);
+  let valid = player.filter((p) => {
+    return p.isValid === true;
   });
+  let invalid = player.filter((p) => {
+    return p.isValid === false;
+  });
+  let foreign = valid.filter((key) => key.type == "foreign").length;
+
+  let InValidReason = [];
+  if (valid.length < season.min_player || valid.length > season.max_player) {
+    InValidReason.push("Invalid number of valid player");
+  }
+  if (
+    foreign < season.min_foreign_player ||
+    foreign > season.max_foreign_player
+  ) {
+    InValidReason.push("Invalid number of foreign player");
+  }
+  let isValid = InValidReason.length == 0 ? true : false;
+  const item = {
+    clubID: c._id,
+    clubName: c.name,
+    numberOfValidPlayer: valid.length,
+    foreign,
+    valid,
+    invalid,
+    isValid,
+  };
+  return item;
+});
 //  } end of Helper Funciton -----------------------------------------
 
 module.exports = {
   createRanking,
-  getRankings,
-  getARanking,
+  createRankingForASeason,
+
+  getRankingOfASeason,
   findRankings,
-  updateRanking,
-  deleteRanking,
+  deleteAClubRanking,
 
   getValidate,
   getValidatePlayer,
