@@ -1,9 +1,29 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const asyncHandler = require("express-async-handler");
-const Season = require("../models/seasonModel");
 
-// @desc    Create new season
+const {
+  funcFindSeasonExists,
+  funcCreateASeason,
+  funcGetAllSeasons,
+  funcGetASeason,
+  funcSearchSeasons,
+  funcUpdateASeason,
+  funcDeleteASeason,
+} = require("../services/seasonServices");
+
+const {
+  funcSearchRanking,
+  CreateARanking,
+  Validate,
+  ValidatePlayerInClub,
+  ValidateClub,
+  funcDeleteARanking,
+  GetValidatePlayer,
+  GetValidateClubWithPlayer,
+} = require('../services/rankingServices')
+
+// ------ @desc    Create new season
 // @route   POST /api/season
 // @access  Public
 const createSeason = asyncHandler(async (req, res) => {
@@ -15,17 +35,14 @@ const createSeason = asyncHandler(async (req, res) => {
   const name = req.body.name
     ? req.body.name
     : "Vleague " + new Date().getFullYear().toString();
-  const seasonExist = await Season.findOne({ name });
-  if (seasonExist) {
-    // res.status(400);
-    // throw new Error("Already created for this season");
+  const seasonExist = await funcFindSeasonExists(name);
+  if (seasonExist.length > 0) {
     res
-      .status(200)
+      .status(400)
       .json({ message: "Already created for this season", seasonExist });
     return;
   }
-
-  const season = await Season.create({
+  const item = {
     name: name,
 
     min_player:
@@ -53,13 +70,9 @@ const createSeason = asyncHandler(async (req, res) => {
         ? req.body.play_duration
         : 96,
 
-    start_date:
-      req.body.start_date
-        ? Date.parse(req.body.start_date)
-        : null,
+    start_date: req.body.start_date ? Date.parse(req.body.start_date) : null,
 
-    end_date:
-      req.body.end_date ? Date.parse(req.body.end_date) : null,
+    end_date: req.body.end_date ? Date.parse(req.body.end_date) : null,
 
     win_point:
       typeof req.body.win_point !== "undefined" ? req.body.win_point : 3,
@@ -86,10 +99,12 @@ const createSeason = asyncHandler(async (req, res) => {
       typeof req.body.lose_rank !== "undefined" ? req.body.lose_rank : 5,
 
     goal_type:
-    Array.isArray(req.body.goal_type) && req.body.goal_type.length != 0
+      Array.isArray(req.body.goal_type) && req.body.goal_type.length != 0
         ? req.body.goal_type
         : ["A", "B", "C"],
-  });
+  };
+  // const season = await Season.create();
+  const season = await funcCreateASeason(item);
   res.status(200).json(season);
 });
 
@@ -97,15 +112,17 @@ const createSeason = asyncHandler(async (req, res) => {
 // @route   GET /api/seasons
 // @access  Public
 const getSeason = asyncHandler(async (req, res) => {
-  const seasons = await Season.find();
+  const seasons = await funcGetAllSeasons();
   res.status(200).json(seasons);
 });
+
 // @desc    Get seasons
 // @route   GET /api/seasons/:id
 // @access  Public
 const getASeason = asyncHandler(async (req, res) => {
-  res.status(200).json(await Season.findById(req.params.id));
+  res.status(200).json(await funcGetASeason(req.params.id));
 });
+
 // @desc    find seasons
 // @route   POST /api/seasons/search
 // @access  Public
@@ -114,21 +131,21 @@ const findSeason = asyncHandler(async (req, res) => {
     res.status(400);
     throw new Error("Please enter name field");
   }
-  const seasons = await Season.find({
-    name: { $regex: ".*" + req.body.name + ".*" },
-  });
+  const seasons = await funcSearchSeasons(req.body.name);
   res.status(200).json(seasons);
 });
+
 // @desc    Update season
 // @route   PUT /api/seasons:id
 // @access  Public
 const updateSeason = asyncHandler(async (req, res) => {
-  const season = await Season.findById(req.params.id);
+  // check exists
+  const season = await funcGetASeason(req.params.id);
   if (!season) {
     res.status(400);
     throw new Error("Season not exists");
   }
-
+  // get input
   const updateValue = {
     name: req.body.name ? req.body.name : season.name,
 
@@ -216,31 +233,132 @@ const updateSeason = asyncHandler(async (req, res) => {
         : season.lose_rank,
 
     goal_type:
-      Array.isArray(req.body.goal_type) && req.body.goal_type.length !=0
+      Array.isArray(req.body.goal_type) && req.body.goal_type.length != 0
         ? req.body.goal_type
         : season.goal_type,
   };
-  const updatedSeason = await Season.findByIdAndUpdate(
-    req.params.id,
-    updateValue,
-    {
-      new: true,
-    }
-  );
+  // check input value
+  const existedValue = await funcSearchSeasons(updateValue.name);
+  const existed = existedValue.filter((i) => {
+    return season._id.toString() != i._id.toString();
+  });
+  if (existed.length > 0) {
+    res.status(400).json({ message: "name existed",existed})
+    return;
+}
+  // update
+  const updatedSeason = await funcUpdateASeason(req.params.id, updateValue);
   res.status(200).json({ msg: "updateSeason", updatedSeason });
 });
 // @desc    Delete season
-// @route   DELETE /api/seasons:id
+// @route   DELETE /api/seasons/:id
 // @access  Public
 const deleteSeason = asyncHandler(async (req, res) => {
-  const season = await Season.findById(req.params.id);
-  if (!season) {
-    res.status(400);
-    throw new Error("Season not exists");
-  }
-  await season.remove();
-  res.status(200).json({ id: req.params.id });
+  const result = await funcDeleteASeason(req.params.id);
+  res.status(200).json(result);
 });
+
+//// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ranking {
+// @desc    get Valid club that can join, result in isValid attribute of json 
+// @route   GET /api/seasons/:id/register/validate/valid
+// @access  Private
+const getValidClubs = asyncHandler(async (req, res) => {
+  const season = req.params.id
+  let result = await GetValidateClubWithPlayer(season)
+  if (result.error) {
+    res.status(400);
+    // throw new Error(result.error)
+  } else {
+    res.status(200);
+    result = result.filter((r)=>{return r.isValid == true})
+  }
+  res.json(result);
+});
+
+// @desc    get Validate club table that can join, result in isValid attribute of json 
+// @route   GET /api/seasons/:id/register/validate/
+// @access  Private
+const getValidateClubs = asyncHandler(async (req, res) => {
+  const season = req.params.id
+  const result = await GetValidateClubWithPlayer(season)
+  if (result.error) {
+    res.status(400);
+    // throw new Error(result.error)
+  } else {
+    res.status(200);
+  }
+  res.json(result);
+});
+// @desc    Validate player in club that can join, result in isValid attribute of json 
+// @route   GET /api/seasons/:id/register/validate/:clubId
+// @access  Private
+const getValidatePlayerInClub = asyncHandler(async (req, res) => {
+  const season = req.params.id;
+  const club = req.params.clubId;
+
+  const result = await GetValidatePlayer(season,club)
+  if (result.error) {
+    res.status(400);
+    // throw new Error(result.error)
+  } else {
+    res.status(200);
+  }
+  res.json(result);
+});
+// @desc    resgister club
+// @route   GET /api/seasons/:id/register
+// @access  Private
+const registerClub = asyncHandler(async (req, res) => {
+  const season = req.params.id;
+  const club = req.params.clubId;
+  const result = await CreateARanking(season,club)
+  if (result.error) {
+    res.status(400);
+    // throw new Error(result.error)
+  } else {
+    res.status(200);
+  }
+  res.json(result);
+});
+// @desc    delete a  register
+// @route   DELETE /api/seasons/:id/register/:clubId
+// @access  Private
+const deleteRegisterClub = asyncHandler(async (req, res) => {
+  const season = req.params.id;
+  const club = req.params.clubId;
+  const ranking = await funcSearchRanking(season,club)
+  console.log(ranking)
+  const rankingId = ranking[0]._id
+  console.log(rankingId)
+  if (!rankingId){
+    res.json({message:"Register not existed"})
+  }
+  const result = await funcDeleteARanking(rankingId)
+  if (result.error) {
+    res.status(200);
+    // throw new Error(result.error)
+  } else {
+    res.status(200);
+  }
+  res.json(result);
+
+});
+// @desc    get registers, ranking
+// @route   Get /api/seasons/:id/register
+// @route   Get /api/seasons/:id/rakings
+// @access  Private
+const getRankings = asyncHandler(async (req, res) => {
+  const season = req.params.id;
+  const result = await funcSearchRanking(season,undefined)
+  if (result.error) {
+    res.status(400);
+    // throw new Error(result.error)
+  } else {
+    res.status(200);
+  }
+  res.json(result);
+});
+//// } ranking <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 module.exports = {
   createSeason,
@@ -249,4 +367,11 @@ module.exports = {
   findSeason,
   updateSeason,
   deleteSeason,
+
+  getValidClubs,
+  getValidateClubs,
+  getValidatePlayerInClub,
+  registerClub,
+  deleteRegisterClub,
+  getRankings,
 };

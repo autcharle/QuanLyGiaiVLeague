@@ -19,6 +19,7 @@ app.use('/api/seasons', require('./routes/seasonRoutes'))
 app.use('/api/clubs', require('./routes/clubRoutes'))
 app.use('/api/players', require('./routes/playerRoutes'))
 app.use('/api/rankings', require('./routes/rankingRoutes'))
+app.use('/api/matches', require('./routes/matchRoutes'))
 /// } end API section
 
 app.use(errorHandler)

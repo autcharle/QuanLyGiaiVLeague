@@ -24,7 +24,7 @@ const matchSchema = mongoose.Schema({
         type: Number,
         default: 0,
     },
-    home_point:{
+    away_point:{
         type: Number,
         default: 0,
     },
