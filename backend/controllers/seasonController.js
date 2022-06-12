@@ -327,12 +327,12 @@ const deleteRegisterClub = asyncHandler(async (req, res) => {
   const season = req.params.id;
   const club = req.params.clubId;
   const ranking = await funcSearchRanking(season,club)
-  console.log(ranking)
-  const rankingId = ranking[0]._id
-  console.log(rankingId)
-  if (!rankingId){
+  
+  if (ranking.length <= 0){
     res.json({message:"Register not existed"})
+    return;
   }
+  const rankingId = ranking[0]._id
   const result = await funcDeleteARanking(rankingId)
   if (result.error) {
     res.status(200);
