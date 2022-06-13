@@ -42,14 +42,14 @@ const createClub = asyncHandler(async (req, res) => {
   const existedClubs = await funcSearchExistClub(user, name, stadium);
   if (existedClubs.length != 0) {
     res.status(400).json({
-      message: "manager or name or stadium existed in other club",
+      error: "manager or name or stadium existed in other club",
       existedClubs,
     });
     return;
   }
   // create club
   const club = await funcCreateAClub(user, name, stadium);
-  res.status(200).json({ club });
+  res.status(200).json( club );
 });
 
 // @desc    Get clubs
@@ -107,7 +107,7 @@ const updateClub = asyncHandler(async (req, res) => {
   });
 
   if (existed.length > 0) {
-    res.status(400).json({ message: "value existed", existed });
+    res.status(400).json({ error: "value existed", existed });
     return;
   }
   // update
@@ -117,7 +117,8 @@ const updateClub = asyncHandler(async (req, res) => {
     stadium: stadium,
   };
   const updatedItem = await funcUpdateAClub(req.params.id, updateValue);
-  res.status(200).json({ message: "updateClub", updatedItem });
+  // res.status(200).json(updatedItem);
+  res.status(200).json({ message: "updateClub", club:updatedItem });
 });
 // @desc    Delete season
 // @route   DELETE /api/seasons:id
@@ -165,7 +166,7 @@ const addAPlayerToClub = asyncHandler(async (req, res) => {
 // @route   GET /:id/players/:playerId
 // @access  Public
 const getAPlayerInClub = asyncHandler(async (req, res) => {
-  console.log('asa')
+  console.log("asa");
   const player = await funcGetAPlayer(req.params.playerId);
   res.status(200).json(player);
 });

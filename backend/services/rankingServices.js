@@ -213,6 +213,7 @@ const CreateARanking = asyncHandler(async (seasonId, clubId) => {
     club: clubId,
   });
   return { message: "New register" ,ranking }
+  // return ranking 
 });
 
 // @desc:  Get validate table of player that can join a specific season in a club

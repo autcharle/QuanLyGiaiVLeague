@@ -15,13 +15,18 @@ const {
 const {
   funcSearchRanking,
   CreateARanking,
-  Validate,
-  ValidatePlayerInClub,
-  ValidateClub,
   funcDeleteARanking,
   GetValidatePlayer,
   GetValidateClubWithPlayer,
 } = require('../services/rankingServices')
+
+const {
+  funcSearchMatch,
+  funcCreateMatch,
+  funcUpdateAMatch,
+  funcDeleteAMatch,
+  funcGetAMatch,
+} = require("../services/matchServices");
 
 // ------ @desc    Create new season
 // @route   POST /api/season
@@ -39,7 +44,7 @@ const createSeason = asyncHandler(async (req, res) => {
   if (seasonExist.length > 0) {
     res
       .status(400)
-      .json({ message: "Already created for this season", seasonExist });
+      .json({ error: "Already created for this season", seasonExist });
     return;
   }
   const item = {
@@ -243,12 +248,12 @@ const updateSeason = asyncHandler(async (req, res) => {
     return season._id.toString() != i._id.toString();
   });
   if (existed.length > 0) {
-    res.status(400).json({ message: "name existed",existed})
+    res.status(400).json({ error: "name existed",existed})
     return;
 }
   // update
   const updatedSeason = await funcUpdateASeason(req.params.id, updateValue);
-  res.status(200).json({ msg: "updateSeason", updatedSeason });
+  res.status(200).json({ message: "updateSeason", season:updatedSeason });
 });
 // @desc    Delete season
 // @route   DELETE /api/seasons/:id
@@ -329,7 +334,7 @@ const deleteRegisterClub = asyncHandler(async (req, res) => {
   const ranking = await funcSearchRanking(season,club)
   
   if (ranking.length <= 0){
-    res.json({message:"Register not existed"})
+    res.json({error:"Register not existed"})
     return;
   }
   const rankingId = ranking[0]._id
@@ -345,7 +350,6 @@ const deleteRegisterClub = asyncHandler(async (req, res) => {
 });
 // @desc    get registers, ranking
 // @route   Get /api/seasons/:id/register
-// @route   Get /api/seasons/:id/rakings
 // @access  Private
 const getRankings = asyncHandler(async (req, res) => {
   const season = req.params.id;
@@ -360,6 +364,62 @@ const getRankings = asyncHandler(async (req, res) => {
 });
 //// } ranking <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
+//// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> match {
+// @desc    search matches
+// @route   GET /api/seasons/:id/matches/
+// @access  Private
+const searchMatches = asyncHandler(async (req, res) => {
+  const season = req.params.id;
+  const { round, home_club, away_club, on_date } = req.body;
+  const result = await funcSearchMatch(season, round, home_club, away_club, on_date )
+
+  if (result.error) {
+    res.status(400);
+    // throw new Error(result.error)
+  } else {
+    res.status(200);
+  }
+  res.json(result);
+});
+// @desc    create a matche
+// @route   POST /api/seasons/:id/matches/
+// @access  Private
+const createAMatch = asyncHandler(async (req, res) => {
+  const season = req.params.id;
+  const { round, home_club, away_club, on_date } = req.body;
+  const result = await funcCreateMatch(
+    season,
+    round,
+    home_club,
+    away_club,
+    on_date
+  );
+
+  if (result.error) {
+    res.status(400);
+    // throw new Error(result.error)
+  } else {
+    res.status(200);
+  }
+  res.json(result);
+});
+
+// @desc    delete a match
+// @route   DELETE /api/seasons/:id/matches/:matchId
+// @access  Private
+const deleteAMatch = asyncHandler(async (req, res) => {
+  const id = req.params.matchId;
+  const result = await funcDeleteAMatch(id)
+  if (result.error) {
+    res.status(400);
+    // throw new Error(result.error)
+  } else {
+    res.status(200);
+  }
+  res.json(result);
+});
+
+//// } match <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 module.exports = {
   createSeason,
   getSeason,

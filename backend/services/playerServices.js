@@ -32,8 +32,8 @@ const funcGetPlayers = asyncHandler(async () => {
 // @para : player's id
 // @return: player
 const funcGetAPlayer = asyncHandler(async (id) => {
-  const players = await Player.findById(id);
-  return players;
+  const player = await Player.findById(id);
+  return player;
 });
 
 // @desc: Search player

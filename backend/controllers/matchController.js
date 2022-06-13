@@ -3,126 +3,107 @@ const bcrypt = require("bcryptjs");
 const asyncHandler = require("express-async-handler");
 const mongoose = require("mongoose");
 
-const Match = require("../models/matchModel");
-const Ranking = require("../models/rankingModel");
-const Season = require("../models/seasonModel");
-
+const {
+  funcSearchMatch,
+  funcCreateMatch,
+  funcUpdateAMatch,
+  funcDeleteAMatch,
+  funcGetAMatch,
+} = require("../services/matchServices");
 
 // @desc    Create new match
 // @route   POST /api/matches
 // @access  Public
-const createMatch = asyncHandler(async (req, res) => {
+const createAMatch = asyncHandler(async (req, res) => {
   // check input
   const { season, round, home_club, away_club, on_date } = req.body;
-  if (!season || !round || !home_club|| !away_club|| !on_date) {
+  const result = await funcCreateMatch(
+    season,
+    round,
+    home_club,
+    away_club,
+    on_date
+  );
+
+  if (result.error) {
     res.status(400);
-    throw new Error("Please add a text field");
+    // throw new Error(result.error)
+  } else {
+    res.status(200);
   }
-  // check exist
-  const existedMatchs = await Match.find({
-    $and: [
-      { season: new mongoose.Types.ObjectId(season) },
-      { round: { _id: user } },
-      { home_club: { $regex: ".*" + stadium + ".*" } },
-      { away_club: { $regex: ".*" + stadium + ".*" } },
-    ],
-  });
-  if (existedMatchs.length != 0) {
-    // res.status(400);
-    // throw new Error("Already created for this season");
-    res
-      .status(400)
-      .json({
-        message: "manager or name or stadium existed in other match",
-        existedMatchs,
-      });
-    return;
-  }
-  const match = await Match.create({
-    user: user,
-    name: name,
-    stadium: stadium,
-  });
-
-  res.status(200).json({ match });
-});
-
-// @desc    Get matches
-// @route   GET /api/matches
-// @access  Public
-const getMatchs = asyncHandler(async (req, res) => {
-  const matches = await Match.find();
-  res.status(200).json(matches);
+  res.json(result);
 });
 
 // @desc    Get seasons
 // @route   GET /api/seasons/:id
 // @access  Public
 const getAMatch = asyncHandler(async (req, res) => {
-  if (!req.params.id) {
+  const result = await funcGetAMatch(req.params.id)
+  if (result.error) {
     res.status(400);
-    throw new Error("missng id");
+    // throw new Error(result.error)
+  } else {
+    res.status(200);
   }
-
-  res.status(200).json(await Match.findById(req.params.id));
+  res.json(result);
 });
 // @desc    find seasons
 // @route   POST /api/seasons/search
-  // @access  Public
-const findMatchs = asyncHandler(async (req, res) => {
-  const { user, name, stadium } = req.body;
-  if (!user || !name || !stadium) {
+// @access  Public
+const searchMatches = asyncHandler(async (req, res) => {
+  const { season, round, home_club, away_club, on_date } = req.body;
+  const result = await funcSearchMatch(season, round, home_club, away_club, on_date )
+
+  if (result.error) {
     res.status(400);
-    throw new Error("Please add a text field");
+    // throw new Error(result.error)
+  } else {
+    res.status(200);
   }
-  const existedMatchs = await Match.find({
-    $or: [
-      { name: { $regex: ".*" + name + ".*" } },
-      { user: { _id: user } },
-      { stadium: { $regex: ".*" + stadium + ".*" } },
-    ],
-  });
-  res.status(200).json(existedMatchs);
+  res.json(result);
 });
 // @desc    Update season
 // @route   PUT /api/seasons:id
 // @access  Public
-const updateMatch = asyncHandler(async (req, res) => {
-  const match = await Match.findById(req.params.id);
-  
-  if (!match) {
-    res.status(400);
-    throw new Error("Match not existed");
-  }
+const updateAMatch = asyncHandler(async (req, res) => {
+  const id = req.params.id;
+  const { season, round, home_club, away_club, on_date } = req.body;
+  const result = await funcUpdateAMatch(
+    id,
+    season,
+    round,
+    home_club,
+    away_club,
+    on_date
+  );
 
-  const updateValue ={
-      user: req.body.user || match.user,
-      name: req.body.name || match.name,
-      stadium: req.body.stadium || match.stadium,
+  if (result.error) {
+    res.status(400);
+    // throw new Error(result.error)
+  } else {
+    res.status(200);
   }
-  const updatedItem = await Match.findByIdAndUpdate(req.params.id, updateValue, {
-    new: true,
-  });
-  res.status(200).json({ msg: "updateMatch" ,updatedItem});
+  res.json(result);
 });
 // @desc    Delete season
 // @route   DELETE /api/seasons:id
 // @access  Public
-const deleteMatch = asyncHandler(async (req, res) => {
-  const match = await Match.findById(req.params.id);
-  if (!match) {
+const deleteAMatch = asyncHandler(async (req, res) => {
+  const id = req.params.id;
+  const result = await funcDeleteAMatch(id)
+  if (result.error) {
     res.status(400);
-    throw new Error("Match not existed");
+    // throw new Error(result.error)
+  } else {
+    res.status(200);
   }
-  await match.remove();
-  res.status(200).json({id : req.params.id });
+  res.json(result);
 });
 
 module.exports = {
-  createMatch,
-  getMatchs,
+  createAMatch,
+  searchMatches,
   getAMatch,
-  findMatchs,
-  updateMatch,
-  deleteMatch,
+  updateAMatch,
+  deleteAMatch,
 };

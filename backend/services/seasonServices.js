@@ -28,7 +28,7 @@ const funcGetAllSeasons = asyncHandler(async () => {
 // @para : id of the season
 // @return: season
 const funcGetASeason = asyncHandler(async (id) => {
-  return await Season.findById(id);
+  return await {season : Season.findById(id)};
 });
 
 // @desc: search a season (similer is enough, use or for attr)
@@ -60,7 +60,7 @@ const funcDeleteASeason = asyncHandler(async (id) => {
     await season.remove();
     return { id: id }
   });
-  
+
 module.exports = {
   funcFindSeasonExists,
   funcCreateASeason,
