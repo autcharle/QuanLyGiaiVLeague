@@ -387,7 +387,6 @@ const searchMatches = asyncHandler(async (req, res) => {
 const createAMatch = asyncHandler(async (req, res) => {
   const season = req.params.id;
   const { round, home_club, away_club, on_date } = req.body;
-  console.log(season,round, home_club, away_club, on_date)
   const result = await funcCreateMatch(
     season,
     round,
