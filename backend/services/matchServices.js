@@ -66,16 +66,16 @@ const funcCreateMatch = asyncHandler(
       undefined
     );
     if (existedMatch.length > 0) {
-      return { error: "Existed match in season" };
+      return { error: "Existed match in season",existedMatch };
     }
     round = Number.parseInt(round);
-    round = new Date(on_date);
+    on_date = new Date(on_date);
     const match = await Match.create({
-      season,
-      round,
-      home_club,
-      away_club,
-      on_date,
+      season:season,
+      round:round,
+      home_club:home_club,
+      away_club:away_club,
+      on_date:on_date,
     });
     return { message: "new match", match };
     // return match;

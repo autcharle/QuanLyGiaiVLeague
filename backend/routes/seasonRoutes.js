@@ -44,7 +44,7 @@ router.route("/:id/registers").get(getRankings)
 
 //// >>>> Matches
 router.route("/:id/matches/").get(searchMatches).post(createAMatch)
-router.route("/:id/matches/search").post(SearchMatches)
+router.route("/:id/matches/search").post(searchMatches)
 router.route("/:id/matches/:matchId").put(updateAMatch).delete(deleteAMatch)
 
 module.exports = router;

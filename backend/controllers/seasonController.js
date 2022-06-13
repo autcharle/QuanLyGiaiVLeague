@@ -387,6 +387,7 @@ const searchMatches = asyncHandler(async (req, res) => {
 const createAMatch = asyncHandler(async (req, res) => {
   const season = req.params.id;
   const { round, home_club, away_club, on_date } = req.body;
+  console.log(season,round, home_club, away_club, on_date)
   const result = await funcCreateMatch(
     season,
     round,
@@ -419,6 +420,30 @@ const deleteAMatch = asyncHandler(async (req, res) => {
   res.json(result);
 });
 
+// @desc    update a match
+// @route   PUT /api/seasons/:id/matches/:matchId
+// @access  Private
+const updateAMatch = asyncHandler(async (req, res) => {
+  const id = req.params.matchId;
+  const { round, home_club, away_club, on_date } = req.body;
+  const result = await funcUpdateAMatch(
+    id,
+    undefined,
+    round,
+    home_club,
+    away_club,
+    on_date
+  );
+
+  if (result.error) {
+    res.status(400);
+    // throw new Error(result.error)
+  } else {
+    res.status(200);
+  }
+  res.json(result);
+});
+
 //// } match <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 module.exports = {
   createSeason,
@@ -434,4 +459,9 @@ module.exports = {
   registerClub,
   deleteRegisterClub,
   getRankings,
+
+  searchMatches,
+  createAMatch,
+  deleteAMatch,
+  updateAMatch  
 };
