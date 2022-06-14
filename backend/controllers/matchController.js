@@ -11,6 +11,12 @@ const {
   funcGetAMatch,
 } = require("../services/matchServices");
 
+const {
+  funcSearchGoal,
+  funcCreateAGoal,
+  funcUpdateAGoal,
+  funcDeleteAGoal,
+} = require("../services/goalServices");
 // @desc    Create new match
 // @route   POST /api/matches
 // @access  Public
@@ -34,8 +40,8 @@ const createAMatch = asyncHandler(async (req, res) => {
   res.json(result);
 });
 
-// @desc    Get seasons
-// @route   GET /api/seasons/:id
+// @desc    Get a match
+// @route   GET /api/match/:id
 // @access  Public
 const getAMatch = asyncHandler(async (req, res) => {
   const result = await funcGetAMatch(req.params.id)
@@ -47,8 +53,8 @@ const getAMatch = asyncHandler(async (req, res) => {
   }
   res.json(result);
 });
-// @desc    find seasons
-// @route   POST /api/seasons/search
+// @desc    find matches
+// @route   POST /api/matches/search
 // @access  Public
 const searchMatches = asyncHandler(async (req, res) => {
   const { season, round, home_club, away_club, on_date } = req.body;
@@ -62,8 +68,8 @@ const searchMatches = asyncHandler(async (req, res) => {
   }
   res.json(result);
 });
-// @desc    Update season
-// @route   PUT /api/seasons:id
+// @desc    Update a match
+// @route   PUT /api/matches/:id
 // @access  Public
 const updateAMatch = asyncHandler(async (req, res) => {
   const id = req.params.id;
@@ -85,8 +91,8 @@ const updateAMatch = asyncHandler(async (req, res) => {
   }
   res.json(result);
 });
-// @desc    Delete season
-// @route   DELETE /api/seasons:id
+// @desc    Delete  a match
+// @route   DELETE /api/matches/:id
 // @access  Public
 const deleteAMatch = asyncHandler(async (req, res) => {
   const id = req.params.id;
@@ -99,11 +105,90 @@ const deleteAMatch = asyncHandler(async (req, res) => {
   }
   res.json(result);
 });
+// >>>>>>>>>>>>>>>>>>>>>>> goals{
+// @desc    Create new a goal
+// @route   POST /api/goals
+// @access  Private
+const createAGoal = asyncHandler(async (req, res) => {
+  // check input
+  const match = req.params.id
+  const { player, goal_minute, type } = req.body;
+  const result = await funcCreateAGoal(player, match, goal_minute, type);
 
+  if (result.error) {
+    res.status(400);
+    // throw new Error(result.error)
+  } else {
+    res.status(200);
+  }
+  res.json(result);
+});
+
+// @desc    Search goals
+// @route   GET /api/goals/search
+// @access  Public
+
+const getGoals = asyncHandler(async (req, res) => {
+  const id = req.params.id;
+  const result = await funcSearchGoal(
+    undefined,
+    undefined,
+    id,
+    undefined,
+    undefined,
+    undefined
+  );
+  if (result.error) {
+    res.status(400);
+    // throw new Error(result.error)
+  } else {
+    res.status(200);
+  }
+  res.json(result);
+});
+
+// @desc    Update a goal
+// @route   PUT /api/goals/:id
+// @access  Public
+
+const updateAGoal = asyncHandler(async (req, res) => {
+  const id = req.params.goalId;
+  const { goal_minute, type } = req.body;
+  const result = await funcUpdateAGoal(id, goal_minute, type);
+
+  if (result.error) {
+    res.status(400);
+    // throw new Error(result.error)
+  } else {
+    res.status(200);
+  }
+  res.json(result);
+});
+// @desc    Delete a goal
+// @route   DELETE /api/goals/:id
+// @access  Public
+
+const deleteAGoal = asyncHandler(async (req, res) => {
+  const id = req.params.goalId;
+  const result = await funcDeleteAGoal(id);
+  if (result.error) {
+    res.status(400);
+    // throw new Error(result.error)
+  } else {
+    res.status(200);
+  }
+  res.json(result);
+});
+// } goals <<<<<<<<<<<<<<<<<<<<<<<<<<< 
 module.exports = {
   createAMatch,
   searchMatches,
   getAMatch,
   updateAMatch,
   deleteAMatch,
+
+  getGoals,
+  createAGoal,
+  updateAGoal,
+  deleteAGoal,
 };

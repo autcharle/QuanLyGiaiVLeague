@@ -15,6 +15,9 @@ const {
   GetValidateClubWithPlayer,
 } = require('../services/rankingServices')
 
+const {
+  funcSumGoalOfPlayers
+} = require('../services/goalServices')
 // @desc    Create a rankings/ register 
 // @route   POST /api/rankings/
 // @access  Public
@@ -109,12 +112,28 @@ const getValidate = asyncHandler(async (req, res) => {
   }
   res.json(result);
 });
+//  For register <<------------------------- //
 
-// ---- Helper Funciton {
+// ------------------------->> For Goals ranking << //
 
+// @desc    Get validate table of player that can join a specific season in a club
+// @route   POST /api/rankings/register/:seasonId/:clubId"
+// @access  Public
+const getPlayerGoals = asyncHandler(async (req, res) => {
+  const season = req.params.seasonId;
 
-//  } end of Helper Funciton -----------------------------------------
+  const result = await funcSumGoalOfPlayers(season)
+  if (result.error) {
+    res.status(400);
+    // throw new Error(result.error)
+  } else {
+    res.status(200);
+  }
+  res.json(result);
 
+});
+
+//  For register <<------------------------- //
 module.exports = {
   createARanking,
 
@@ -124,4 +143,6 @@ module.exports = {
 
   getValidate,
   getValidatePlayer,
+
+  getPlayerGoals,
 };

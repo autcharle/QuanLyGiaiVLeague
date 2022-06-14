@@ -31,7 +31,17 @@ const matchSchema = mongoose.Schema({
     on_date:{
         type: Date,
         required:[true, 'please add date'],
-    }
+    },
+    win_club:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Club',
+        default: null,
+    },
+    lose_club:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Club',
+        default: null,
+    },
 }, {
     timestamps: true,
 })

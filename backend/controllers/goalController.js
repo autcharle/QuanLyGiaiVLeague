@@ -8,6 +8,8 @@ const {
   funcCreateAGoal,
   funcUpdateAGoal,
   funcDeleteAGoal,
+  funcCalculateMatchPoint,
+  funcCalcRankingGoalDiffence,
 } = require("../services/goalServices");
 
 // @desc    Create new a goal
@@ -83,23 +85,28 @@ const deleteAGoal = asyncHandler(async (req, res) => {
   res.json(result);
 });
 
-// // @desc    Delete a goal
-// // @route   DELETE /api/goals/:id
+// // @desc    Test
+// // @route   DELETE /api/goals/test
 // // @access  Public
-
-// const getSumGoals = asyncHandler(async (req, res) => {
-//   const result = await funcSumGoalOfPlayers();
-//   if (result.error) {
-//     res.status(400);
-//     // throw new Error(result.error)
-//   } else {
-//     res.status(200);
-//   }
-//   res.json(result);
-// });
+const test = asyncHandler(async (req, res) => {
+  let {match,season,id} = req.body;
+  match = new mongoose.Types.ObjectId(match)
+  season = new mongoose.Types.ObjectId(season)
+  id = new mongoose.Types.ObjectId(id)
+  const result = await funcCalculateMatchPoint(match);
+  // const result = await funcCalcRankingGoalDiffence(id,season)
+  if (result.error) {
+    res.status(400);
+    // throw new Error(result.error)
+  } else {
+    res.status(200);
+  }
+  res.json(result);
+});
 module.exports = {
   createAGoal,
   searchGoals,
   updateAGoal,
   deleteAGoal,
+  test,
 };

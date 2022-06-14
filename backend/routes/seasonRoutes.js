@@ -47,4 +47,11 @@ router.route("/:id/matches/").get(searchMatches).post(createAMatch)
 router.route("/:id/matches/search").post(searchMatches)
 router.route("/:id/matches/:matchId").put(updateAMatch).delete(deleteAMatch)
 
+//// >>>> player goals
+router.route("/:id/rankings/players").get(
+  asyncHandler(async(req,res)=>{
+    const path = `${req.protocol}://${req.headers.host}/api/rankings/${req.params.id}/players`
+    res.redirect(307,path)
+  })
+)
 module.exports = router;
