@@ -53,6 +53,14 @@ const funcCreateAGoal = asyncHandler(
     // check exist
     const existedMatch = await Match.findById(match);
     if (!existedMatch) return { error: "Match not existed" };
+
+    // //check date
+    // const current = new Date()
+    // const on = Date.parse(existedMatch.on_date)
+    // if (current.getTime() !=  on.getTime()){
+    //   return { message: "can only create on date" };
+    // }
+
     const existedPlayer = await Player.findById(player);
     if (!existedPlayer) return { error: "Player not existed" };
     // check valid
@@ -125,9 +133,16 @@ const funcUpdateAGoal = asyncHandler(async (id, goal_minute, type) => {
     return { error: "goal not exist" };
   }
 
+  // //check date
+  // const match = await Match.findById(goal.match)
+  // const current = new Date()
+  // const on = Date.parse(match.on_date)
+  // if (current.getTime() !=  on.getTime()){
+  //   return { message: "can only update on date" };
+  // }
   const rule = await Season.findById(goal.season);
 
-  if (goal_minute > rule.play_duration) {
+  if (goal_minute > rule.play_duration || goal_minute < 0) {
     return { error: "Invalid goal_minute" };
   }
   if (!rule.goal_type.includes(type)) {
@@ -168,6 +183,13 @@ const funcDeleteAGoal = asyncHandler(async (id) => {
   const goal = await Goal.findById(id);
 
   if (!goal) return { message: "Goal not exists" };
+  // //check date
+  // const start = await Match.findById(goal.match)
+  // const current = new Date()
+  // const on = Date.parse(start.on_date)
+  // if (current.getTime() !=  on.getTime()){
+  //   return { message: "can only delete on date" };
+  // }
   const match = goal.match;
   await goal.remove();
   const result = await funcCalculateMatchPoint(
@@ -391,7 +413,7 @@ const funcCalculateMatchPoint = asyncHandler(async (match) => {
     return { error: "Missing or Invalid input" };
   }
   const curMatch = await Match.findById(match);
-  if (!curMatch){
+  if (!curMatch) {
     return { error: "not existed match" };
   }
   // calc point
@@ -417,8 +439,7 @@ const funcCalculateMatchPoint = asyncHandler(async (match) => {
   let win = null;
   let lose = null;
 
-  if (score.length == 2)
-  {
+  if (score.length == 2) {
     if (curMatch.home_club.toString() == score[0].club.toString()) {
       homePoint = score[0].score;
       awayPoint = score[1].score;
@@ -426,7 +447,7 @@ const funcCalculateMatchPoint = asyncHandler(async (match) => {
       homePoint = score[1].score;
       awayPoint = score[0].score;
     }
-  } else if (score.length == 1){
+  } else if (score.length == 1) {
     if (curMatch.home_club.toString() == score[0].club.toString()) {
       homePoint = score[0].score;
     } else {

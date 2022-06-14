@@ -5,7 +5,8 @@ const Ranking = require("../models/rankingModel");
 const Season = require("../models/seasonModel");
 const Club = require("../models/clubModel");
 const Player = require("../models/playerModel");
-
+const Match = require("../models/matchModel");
+const { findOne } = require("../models/rankingModel");
 // @desc    Create validate table of club that can join a precific season
 // para:    Season Id
 // return   json with club's (id, name), number of valid player and valid foreign player, valid and invalid players and isValid
@@ -100,12 +101,12 @@ const ValidateClub = asyncHandler(async (seasonID, clubID) => {
 // @para : ranking id and
 // @return: true/fasle
 const funcExistSeasonAndClub = asyncHandler(async (seasonId, clubId) => {
-    const season = await Season.findById(seasonId);
-    const clubs = await Club.findById(clubId);
-    if (!season || !clubs) {
-      return false
-    }
-    return true
+  const season = await Season.findById(seasonId);
+  const clubs = await Club.findById(clubId);
+  if (!season || !clubs) {
+    return false;
+  }
+  return true;
 });
 
 // @desc: check if ranking exists
@@ -126,21 +127,29 @@ const funcSearchRanking = asyncHandler(async (seasonId, clubId) => {
   if (clubId) {
     conditions.push({ club: clubId });
   }
-  const ranks = Ranking.find({ $and: conditions }).sort('rank');
+  const ranks = Ranking.find({ $and: conditions }).sort("rank");
   return ranks;
 });
 
 // @desc: delete a ranking exists
-// @para : ranking id 
+// @para : ranking id
 // @return: ranking/ object result
 const funcDeleteARanking = asyncHandler(async (id) => {
-    if (!id){return {error:"missing Ranking id"}}
-    const ranking = await Ranking.findById(id);
-    if (!ranking)
-        return {message: 'Ranking/Register not exists'}
-    await ranking.remove();
-    return { id: id }
+  if (!id) {
+    return { error: "missing Ranking id" };
+  }
+  const ranking = await Ranking.findById(id);
+  // check exist
+  if (!ranking) return { message: "Ranking/Register not exists" };
+  const existMatch = await Match.findOne({
+    season: new mongoose.Types.ObjectId(ranking.season),
   });
+  if (existMatch) {
+    return { error: "Season has start" };
+  }
+  await ranking.remove();
+  return { id: id };
+});
 
 // @desc: create a ranking/ register
 // @para : ranking id and
@@ -153,15 +162,21 @@ const CreateARanking = asyncHandler(async (seasonId, clubId) => {
   ) {
     return { error: "Season and club need to be ObjectId" };
   }
-  
+
   // check exist
-  const existsSC = await funcExistSeasonAndClub(seasonId, clubId)
-  if (!existsSC){
-    return {error: "Not existed season or clubs", existedRanking};
+  const existMatch = await Match.findOne({
+    season: new mongoose.Types.ObjectId(seasonId),
+  });
+  if (existMatch) {
+    return { error: "Season has start" };
+  }
+  const existsSC = await funcExistSeasonAndClub(seasonId, clubId);
+  if (!existsSC) {
+    return { error: "Not existed season or clubs", existedRanking };
   }
   const existedRanking = await funcSearchRanking(seasonId, clubId);
   if (existedRanking.length > 0) {
-      return {error: "Existed ranking", existedRanking};
+    return { error: "Existed ranking", existedRanking };
   }
 
   // Check valid:
@@ -175,58 +190,56 @@ const CreateARanking = asyncHandler(async (seasonId, clubId) => {
     season: seasonId,
     club: clubId,
   });
-  return { message: "New register" ,ranking }
-  // return ranking 
+  return { message: "New register", ranking };
+  // return ranking
 });
 
 // @desc:  Get validate table of player that can join a specific season in a club
 // @para : seasonId, clubId
 // @return:  object result
 const GetValidatePlayer = asyncHandler(async (seasonId, clubId) => {
-    // check input
-    if (!seasonId && !clubId) {
-      return { error: "Please fill text field " };
-    }
-    if (
-      !mongoose.isValidObjectId(seasonId) ||
-      !mongoose.isValidObjectId(clubId)
-    ) {
-      return { error: "Season and club need to be ObjectId" };
-    }
-    // check exist
-    const existsSC = await funcExistSeasonAndClub(seasonId, clubId)
-    if (!existsSC){
-      return {error: "Not existed season or clubs", existedRanking};
-    }
-    
-    const validate_data = await ValidatePlayerInClub(seasonId, clubId)
+  // check input
+  if (!seasonId && !clubId) {
+    return { error: "Please fill text field " };
+  }
+  if (
+    !mongoose.isValidObjectId(seasonId) ||
+    !mongoose.isValidObjectId(clubId)
+  ) {
+    return { error: "Season and club need to be ObjectId" };
+  }
+  // check exist
+  const existsSC = await funcExistSeasonAndClub(seasonId, clubId);
+  if (!existsSC) {
+    return { error: "Not existed season or clubs", existedRanking };
+  }
 
-    return validate_data
-  });
+  const validate_data = await ValidatePlayerInClub(seasonId, clubId);
+
+  return validate_data;
+});
 
 // @desc:  Get validate table of player that can join a specific season in a club
 // @para : seasonId, clubId
 // @return:  object result
 const GetValidateClubWithPlayer = asyncHandler(async (seasonId) => {
-    // check input
-    if (!seasonId) {
-      return { error: "Please fill text field " };
-    }
-    if (
-      !mongoose.isValidObjectId(seasonId)
-    ) {
-      return { error: "Season and club need to be ObjectId" };
-    }
-    // check exist
-    const season = await Season.findById(seasonId);
-    if (!season) {
-        return { error: "Not existed season" };
-    }
-    
-    const validate_data = await Validate(seasonId)
+  // check input
+  if (!seasonId) {
+    return { error: "Please fill text field " };
+  }
+  if (!mongoose.isValidObjectId(seasonId)) {
+    return { error: "Season and club need to be ObjectId" };
+  }
+  // check exist
+  const season = await Season.findById(seasonId);
+  if (!season) {
+    return { error: "Not existed season" };
+  }
 
-    return validate_data
-  });
+  const validate_data = await Validate(seasonId);
+
+  return validate_data;
+});
 
 module.exports = {
   funcSearchRanking,

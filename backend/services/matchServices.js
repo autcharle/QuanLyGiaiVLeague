@@ -47,36 +47,63 @@ const funcCreateMatch = asyncHandler(
       !Number(round) ||
       !mongoose.isValidObjectId(home_club) ||
       !mongoose.isValidObjectId(away_club) ||
-      new Date(on_date) == "Invalid Date" || 
-      home_club.toString() == away_club.toString() 
+      new Date(on_date) == "Invalid Date" ||
+      home_club.toString() == away_club.toString()
     ) {
       return { error: "Missing or Invalid input" };
+    }
+    round = Number.parseInt(round);
+    on_date = new Date(on_date);
+    season = new mongoose.Types.ObjectId(season);
+    const register = await Ranking.find({
+      season: season,
+    });
+    if (register.length % 2 != 0) {
+      return { error: "Need even resgister" };
     }
     // check club in seasons
     const home = await Ranking.findOne({ season, club: home_club });
     if (!home) return { error: "Home club not in season" };
     const away = await Ranking.findOne({ season, club: away_club });
     if (!away) return { error: "Away club not in season" };
-
+    home_club = new mongoose.Types.ObjectId(home_club);
+    away_club = new mongoose.Types.ObjectId(away_club);
     // check exist
-    const existedMatch = await funcSearchMatch(
-      season,
-      undefined,
-      home_club,
-      away_club,
-      undefined
-    );
+    const existedMatch = await Match.find({
+      $and: [
+        { season: new mongoose.Types.ObjectId(season) },
+        {
+          $or: [
+            {
+              $and: [
+                { round: round },
+                { $or: [{ home_club: away_club }, { away_club: home_club }] },
+              ],
+            },
+            {
+              $and: [{ home_club: home_club }, { away_club: away_club }],
+            },
+          ],
+        },
+      ],
+    });
+    // const existedMatch = await funcSearchMatch(
+    //   season,
+    //   undefined,
+    //   home_club,
+    //   away_club,
+    //   undefined
+    // );
     if (existedMatch.length > 0) {
-      return { error: "Existed match in season",existedMatch };
+      return { error: "Existed match in season", existedMatch };
     }
-    round = Number.parseInt(round);
-    on_date = new Date(on_date);
+
     const match = await Match.create({
-      season:season,
-      round:round,
-      home_club:home_club,
-      away_club:away_club,
-      on_date:on_date,
+      season: season,
+      round: round,
+      home_club: home_club,
+      away_club: away_club,
+      on_date: on_date,
     });
     return { message: "new match", match };
     // return match;
@@ -100,14 +127,22 @@ const funcUpdateAMatch = asyncHandler(
     // Get match and check exit
     const match = await Match.findById(id);
     if (!match) return { error: "Match not exists" };
+
+    const current = new Date()
+    const on = Date.parse(match.on_date)
+    if (current > on){
+      return { message: "Match has started" };
+    }
+
     // Picking value
     const updateValue = {
       season: season ? season : match.season,
-      round: round ? round : match.round,
+      round: round ? Number.Int(round) : match.round,
       home_club: home_club ? home_club : match.home_club,
       away_club: away_club ? away_club : match.away_club,
-      on_date: on_date ? on_date : match.on_date,
+      on_date: on_date ?  Date.parse(on_date) : match.on_date,
     };
+
     // Check exist match
 
     const existedMatch = (
@@ -138,6 +173,11 @@ const funcUpdateAMatch = asyncHandler(
 const funcDeleteAMatch = asyncHandler(async (id) => {
   const match = await Match.findById(id);
   if (!match) return { message: "Match not exists" };
+  const current = new Date()
+  const on_date = Date.parse(match.on_date)
+  if (current > on_date){
+    return { message: "Match has started" };
+  }
   await match.remove();
   return { id: id };
 });
