@@ -47,7 +47,8 @@ const funcCreateMatch = asyncHandler(
       !Number(round) ||
       !mongoose.isValidObjectId(home_club) ||
       !mongoose.isValidObjectId(away_club) ||
-      new Date(on_date) == "Invalid Date"
+      new Date(on_date) == "Invalid Date" || 
+      home_club.toString() == away_club.toString() 
     ) {
       return { error: "Missing or Invalid input" };
     }

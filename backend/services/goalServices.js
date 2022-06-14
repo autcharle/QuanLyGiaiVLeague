@@ -81,7 +81,7 @@ const funcCreateAGoal = asyncHandler(
     }
 
     let existedGoal = await funcSearchGoal(
-      player,
+      undefined,
       undefined,
       match,
       undefined,
