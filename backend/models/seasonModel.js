@@ -34,10 +34,6 @@ const seasonSchema = mongoose.Schema(
       type: Number,
       default: 96,
     },
-    play_duration: {
-      type: Number,
-      default: 96,
-    },
     start_date: {
       type: Date,
     },

@@ -18,43 +18,6 @@ const Validate = asyncHandler(async (seasonID) => {
   let list = [];
   for (let i = 0; i < clubs.length; i++) {
     const item = await ValidateClub(seasonID, clubs[i]);
-    /*
-      //   c = clubs[i]
-      //   let player = await ValidatePlayerInClub(seasonID, c._id);
-      //   let valid = player.filter((p) => {
-      //     return p.isValid === true;
-      //   });
-      //   let invalid = player.filter((p) => {
-      //     return p.isValid === false;
-      //   });
-      //   let foreign = valid.filter((key) => key.type == "foreign").length;
-  
-      //   let InValidReason = [];
-      //   if (invalid.length > 0) {
-      //     InValidReason.push("Has invalid player");
-      //   }
-      //   if (
-      //     valid.length < season.min_player ||
-      //     valid.length > season.max_player
-      //   ) {
-      //     InValidReason.push("Invalid number of valid player");
-      //   }
-      //   if (
-      //     foreign < season.min_foreign_player ||
-      //     foreign > season.max_foreign_player
-      //   ) {
-      //     InValidReason.push("Invalid number of foreign player");
-      //   }
-      //   let isValid = InValidReason.length == 0 ? true : false;
-      //   const item = {
-      //     clubID: c._id,
-      //     clubName: c.name,
-      //     numberOfValidPlayer: valid.length,
-      //     foreign,
-      //     valid,
-      //     invalid,
-      //     isValid,
-      //   };*/
     list.push(item);
   }
   return JSON.parse(JSON.stringify(list));

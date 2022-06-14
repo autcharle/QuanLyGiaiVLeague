@@ -25,7 +25,7 @@ const funcSearchMatch = asyncHandler(
       conditions.push({ on_date: on_date });
     }
     if (conditions.length <= 0) {
-      return { error: "Please add a field" };
+      return { error: "Empty field or invalid field" };
       // return await  await Match.find()
     }
 
