@@ -10,6 +10,7 @@ const {
   funcSearchSeasons,
   funcUpdateASeason,
   funcDeleteASeason,
+  funcSeasonFind,
 } = require("../services/seasonServices");
 
 const {
@@ -26,6 +27,7 @@ const {
   funcUpdateAMatch,
   funcDeleteAMatch,
   funcGetAMatch,
+  
 } = require("../services/matchServices");
 
 // ------ @desc    Create new season
@@ -141,15 +143,23 @@ const findSeason = asyncHandler(async (req, res) => {
 });
 
 // @desc    Update season
-// @route   PUT /api/seasons:id
+// @route   PUT /api/seasons/:id | /api/seasons/
 // @access  Public
 const updateSeason = asyncHandler(async (req, res) => {
+  const seasonname = req.body.id ? req.body.id : req.body.name
+  let id = req.params.id ? req.params.id : seasonname
+  if (!id)
+  {
+    res.status(400).json({ error: "missing input"});
+    throw new Error("missing input")
+  }
   // check exists
-  const season = await funcGetASeason(req.params.id);
+  const season = await funcSeasonFind(id);
   if (!season) {
     res.status(400);
     throw new Error("Season not exists");
   }
+  id = season._id
   // get input
   const updateValue = {
     name: req.body.name ? req.body.name : season.name,
@@ -252,14 +262,21 @@ const updateSeason = asyncHandler(async (req, res) => {
     return;
 }
   // update
-  const updatedSeason = await funcUpdateASeason(req.params.id, updateValue);
+  const updatedSeason = await funcUpdateASeason(id, updateValue);
   res.status(200).json({ message: "updateSeason", season:updatedSeason });
 });
 // @desc    Delete season
-// @route   DELETE /api/seasons/:id
+// @route   DELETE /api/seasons/:id | /api/seasons
 // @access  Public
 const deleteSeason = asyncHandler(async (req, res) => {
-  const result = await funcDeleteASeason(req.params.id);
+  const seasonname = req.body.id ? req.body.id : req.body.name
+  const id = req.params.id ? req.params.id : seasonname
+  if (!id)
+  {
+    res.status(400).json({ error: "missing input", existed });
+    throw new Error("missing input")
+  }
+  const result = await funcDeleteASeason(id);
   res.status(200).json(result);
 });
 
@@ -287,12 +304,10 @@ const getValidateClubs = asyncHandler(async (req, res) => {
   const season = req.params.id
   const result = await GetValidateClubWithPlayer(season)
   if (result.error) {
-    res.status(400);
-    // throw new Error(result.error)
-  } else {
-    res.status(200);
+    res.status(400).json(result);
+    throw new Error(result.error)
   }
-  res.json(result);
+  res.status(200).json(result);
 });
 // @desc    Validate player in club that can join, result in isValid attribute of json 
 // @route   GET /api/seasons/:id/register/validate/:clubId
@@ -303,12 +318,10 @@ const getValidatePlayerInClub = asyncHandler(async (req, res) => {
 
   const result = await GetValidatePlayer(season,club)
   if (result.error) {
-    res.status(400);
-    // throw new Error(result.error)
-  } else {
-    res.status(200);
+    res.status(400).json(result);
+    throw new Error(result.error)
   }
-  res.json(result);
+  res.status(200).json(result);
 });
 // @desc    resgister club
 // @route   GET /api/seasons/:id/register
@@ -318,12 +331,10 @@ const registerClub = asyncHandler(async (req, res) => {
   const club = req.params.clubId;
   const result = await CreateARanking(season,club)
   if (result.error) {
-    res.status(400);
-    // throw new Error(result.error)
-  } else {
-    res.status(200);
+    res.status(400).json(result);
+    throw new Error(result.error)
   }
-  res.json(result);
+  res.status(200).json(result);
 });
 // @desc    delete a  register
 // @route   DELETE /api/seasons/:id/register/:clubId
@@ -331,7 +342,7 @@ const registerClub = asyncHandler(async (req, res) => {
 const deleteRegisterClub = asyncHandler(async (req, res) => {
   const season = req.params.id;
   const club = req.params.clubId;
-  const ranking = await funcSearchRanking(season,club)
+  const ranking = await funcSearchRanking(season,club,undefined)
   
   if (ranking.length <= 0){
     res.json({error:"Register not existed"})
@@ -353,14 +364,12 @@ const deleteRegisterClub = asyncHandler(async (req, res) => {
 // @access  Private
 const getRankings = asyncHandler(async (req, res) => {
   const season = req.params.id;
-  const result = await funcSearchRanking(season,undefined)
+  const result = await funcSearchRanking(season,undefined,undefined)
   if (result.error) {
-    res.status(400);
-    // throw new Error(result.error)
-  } else {
-    res.status(200);
+    res.status(400).json(result);
+    throw new Error(result.error)
   }
-  res.json(result);
+  res.status(200).json(result);
 });
 //// } ranking <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -374,12 +383,10 @@ const searchMatches = asyncHandler(async (req, res) => {
   const result = await funcSearchMatch(season, round, home_club, away_club, on_date )
 
   if (result.error) {
-    res.status(400);
-    // throw new Error(result.error)
-  } else {
-    res.status(200);
+    res.status(400).json(result);
+    throw new Error(result.error)
   }
-  res.json(result);
+  res.status(200).json(result);
 });
 // @desc    create a matche
 // @route   POST /api/seasons/:id/matches/
@@ -396,34 +403,31 @@ const createAMatch = asyncHandler(async (req, res) => {
   );
 
   if (result.error) {
-    res.status(400);
-    // throw new Error(result.error)
-  } else {
-    res.status(200);
+    res.status(400).json(result);
+    throw new Error(result.error)
   }
-  res.json(result);
+  res.status(200).json(result);
 });
 
 // @desc    delete a match
 // @route   DELETE /api/seasons/:id/matches/:matchId
 // @access  Private
 const deleteAMatch = asyncHandler(async (req, res) => {
-  const id = req.params.matchId;
-  const result = await funcDeleteAMatch(id)
+  const id = req.params.matchId ? req.params.matchId : req.body.match ;
+  const {season,home_club,away_club} = req.body
+  const result = await funcDeleteAMatch(id,season,home_club,away_club)
   if (result.error) {
-    res.status(400);
-    // throw new Error(result.error)
-  } else {
-    res.status(200);
+    res.status(400).json(result);
+    throw new Error(result.error)
   }
-  res.json(result);
+  res.status(200).json(result);
 });
 
 // @desc    update a match
 // @route   PUT /api/seasons/:id/matches/:matchId
 // @access  Private
 const updateAMatch = asyncHandler(async (req, res) => {
-  const id = req.params.matchId;
+  const id = req.params.matchId ? req.params.matchId :  req.body.match;
   const { round, home_club, away_club, on_date } = req.body;
   const result = await funcUpdateAMatch(
     id,
@@ -435,12 +439,10 @@ const updateAMatch = asyncHandler(async (req, res) => {
   );
 
   if (result.error) {
-    res.status(400);
-    // throw new Error(result.error)
-  } else {
-    res.status(200);
+    res.status(400).json(result);
+    throw new Error(result.error)
   }
-  res.json(result);
+  res.status(200).json(result);
 });
 
 //// } match <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

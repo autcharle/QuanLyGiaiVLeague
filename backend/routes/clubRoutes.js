@@ -20,7 +20,7 @@ const {
 // const { protect } = require("../middleware/authMiddleware");
 
 //// >>>> clubs
-router.route("/").get(getClubs).post(createClub);
+router.route("/").get(getClubs).post(createClub).put(updateClub).delete(deleteClub);
 router.route("/:id").get(getAClub).put(updateClub).delete(deleteClub);
 router.route("/search").post(findClubs)
 //// >>>> player in clubs

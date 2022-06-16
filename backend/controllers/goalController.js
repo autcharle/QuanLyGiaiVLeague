@@ -21,12 +21,10 @@ const createAGoal = asyncHandler(async (req, res) => {
   const result = await funcCreateAGoal(player, match, goal_minute, type);
 
   if (result.error) {
-    res.status(400);
-    // throw new Error(result.error)
-  } else {
-    res.status(200);
+    res.status(400).json(result);
+    throw new Error(result.error)
   }
-  res.json(result);
+  res.status(200).json(result);
 });
 
 // @desc    Search goals
@@ -44,12 +42,10 @@ const searchGoals = asyncHandler(async (req, res) => {
     type
   );
   if (result.error) {
-    res.status(400);
-    // throw new Error(result.error)
-  } else {
-    res.status(200);
+    res.status(400).json(result);
+    throw new Error(result.error)
   }
-  res.json(result);
+  res.status(200).json(result);
 });
 
 // @desc    Update a goal
@@ -62,12 +58,10 @@ const updateAGoal = asyncHandler(async (req, res) => {
   const result = await funcUpdateAGoal(id, goal_minute, type);
 
   if (result.error) {
-    res.status(400);
-    // throw new Error(result.error)
-  } else {
-    res.status(200);
+    res.status(400).json(result);
+    throw new Error(result.error)
   }
-  res.json(result);
+  res.status(200).json(result);
 });
 // @desc    Delete a goal
 // @route   DELETE /api/goals/:id
@@ -77,12 +71,10 @@ const deleteAGoal = asyncHandler(async (req, res) => {
   const id = req.params.id;
   const result = await funcDeleteAGoal(id);
   if (result.error) {
-    res.status(400);
-    // throw new Error(result.error)
-  } else {
-    res.status(200);
+    res.status(400).json(result);
+    throw new Error(result.error)
   }
-  res.json(result);
+  res.status(200).json(result);
 });
 
 // // @desc    Test
@@ -96,12 +88,10 @@ const test = asyncHandler(async (req, res) => {
   const result = await funcCalculateMatchPoint(match);
   // const result = await funcCalcRankingGoalDiffence(id,season)
   if (result.error) {
-    res.status(400);
-    // throw new Error(result.error)
-  } else {
-    res.status(200);
+    res.status(400).json(result);
+    throw new Error(result.error)
   }
-  res.json(result);
+  res.status(200).json(result);
 });
 module.exports = {
   createAGoal,

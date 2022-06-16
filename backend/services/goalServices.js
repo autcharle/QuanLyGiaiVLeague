@@ -7,16 +7,58 @@ const Goal = require("../models/goalModel");
 const Ranking = require("../models/rankingModel");
 const mongoose = require("mongoose");
 
+const { funcSeasonFind } = require("../services/seasonServices");
+const { funcClubFind } = require("../services/clubServices");
+const { funcPlayerFind} = require("../services/playerServices");
+
+const populate_goal = [
+  {
+    $lookup: {
+      from: "players",
+      localField: "player",
+      foreignField: "_id",
+      as: "player",
+    },
+  },
+  { $unwind: "$player" },
+  { $addFields: { player: "$player._id", playername: "$player.name" } },
+
+  {
+    $lookup: {
+      from: "clubs",
+      localField: "club",
+      foreignField: "_id",
+      as: "club",
+    },
+  },
+  { $unwind: "$club" },
+  { $addFields: { club: "$club._id", clubname: "$club.name" } },
+
+  {
+    $lookup: {
+      from: "seasons",
+      localField: "season",
+      foreignField: "_id",
+      as: "season",
+    },
+  },
+  { $unwind: "$season" },
+  { $addFields: { season: "$season._id", seasonname: "$season.name" } }
+]
 // @desc: search goal
 // @para :
 // @return: goal list
 const funcSearchGoal = asyncHandler(
   async (player, club, match, season, goal_minute, type) => {
     let conditions = [];
-    if (mongoose.isValidObjectId(player)) conditions.push({ player: player });
-    if (mongoose.isValidObjectId(club)) conditions.push({ club: club });
-    if (mongoose.isValidObjectId(match)) conditions.push({ match: match });
-    if (mongoose.isValidObjectId(season)) conditions.push({ season: season });
+    let findPlayer = await funcPlayerFind(player)
+    let findClub = await funcClubFind(club)
+    let findSeason = await funcSeasonFind(season)
+
+    if (findPlayer) conditions.push({ player: findPlayer._id });
+    if (findClub) conditions.push({ club: findClub._id });
+    if (mongoose.isValidObjectId(match)) conditions.push({ match: new mongoose.Types.ObjectId(match) });
+    if (findSeason) conditions.push({ season: findSeason._id });
     if (Number(goal_minute)) {
       goal_minute = Number.parseInt(goal_minute);
       conditions.push({ goal_minute: goal_minute });
@@ -24,14 +66,25 @@ const funcSearchGoal = asyncHandler(
     if (type) {
       conditions.push({ type: type });
     }
-    if (conditions.length <= 0) {
-      return { error: "Empty field or invalid field" };
-      // return await  await Match.find()
+    // if (conditions.length <= 0) {
+    //   return { error: "Empty field or invalid field" };
+    //   // return await  await Match.find()
+    // }
+    let agg = [...populate_goal];
+    if (conditions.length == 0) {
+      // return await funcGetPlayers();
+      return [];
+    } else if (conditions.length == 1) {
+      agg.unshift({ $match: conditions[0] });
+    } else {
+      agg.unshift({ $match: { $and: conditions } });
     }
+   
+    // const goals = await Goal.find({
+    //   $and: conditions,
+    // });
+    const goals = await Goal.aggregate(agg)
 
-    const goals = await Goal.find({
-      $and: conditions,
-    });
     return goals;
   }
 );
@@ -41,15 +94,16 @@ const funcSearchGoal = asyncHandler(
 
 const funcCreateAGoal = asyncHandler(
   async (player, match, goal_minute, type) => {
+    let findPlayer = await funcPlayerFind(player)
     if (
-      !mongoose.isValidObjectId(player) ||
+      !player ||
       !mongoose.isValidObjectId(match) ||
       !Number(goal_minute) ||
       !type
     ) {
       return { error: "Missing or Invalid input" };
     }
-
+    player = new mongoose.Types.ObjectId(findPlayer._id)
     // check exist
     const existedMatch = await Match.findById(match);
     if (!existedMatch) return { error: "Match not existed" };
@@ -61,26 +115,22 @@ const funcCreateAGoal = asyncHandler(
     //   return { message: "can only create on date" };
     // }
 
-    const existedPlayer = await Player.findById(player);
-    if (!existedPlayer) return { error: "Player not existed" };
+    // const existedPlayer = await Player.findById(player);
+    // if (!existedPlayer) return { error: "Player not existed" };
     // check valid
 
     const rule = await Season.findById(existedMatch.season);
-    const age =
-      new Date().getFullYear() - new Date(existedPlayer.dob).getFullYear();
+    const age =new Date().getFullYear() - new Date(findPlayer.dob).getFullYear();
 
     if (
       age > rule.max_age ||
       age < rule.min_age ||
-      (existedPlayer.club.toString() != existedMatch.home_club.toString() &&
-        existedPlayer.club.toString() != existedMatch.away_club.toString())
+      (findPlayer.club.toString() != existedMatch.home_club.toString() &&
+      findPlayer.club.toString() != existedMatch.away_club.toString())
     )
       return { error: "Invalid player" };
     goal_minute = Number.parseInt(goal_minute);
-    if (goal_minute > rule.play_duration) {
-      return { error: "Invalid goal_minute" };
-    }
-    if (goal_minute > rule.play_duration) {
+    if (goal_minute > rule.play_duration || goal_minute < 0) {
       return { error: "Invalid goal_minute" };
     }
 
@@ -99,13 +149,15 @@ const funcCreateAGoal = asyncHandler(
     // existedGoal = existedGoal.filter((g) => {
     //   return g._id != match;
     // });
+    console.log(existedGoal)
+
     if (existedGoal.length > 0) {
-      return { error: "existed goal" };
+      return { error: "existed goal" ,existedGoal};
     }
     // create
     const goal = await Goal.create({
       player: player,
-      club: existedPlayer.club,
+      club: findPlayer.club,
       match: match,
       season: existedMatch.season,
       goal_minute: goal_minute,
@@ -116,19 +168,39 @@ const funcCreateAGoal = asyncHandler(
     const result = await funcCalculateMatchPoint(
       new mongoose.Types.ObjectId(match)
     );
-    return goal;
+    let agg = [...populate_goal];
+    agg.unshift({$match:{_id:goal._id}})
+    const g = await Goal.aggregate(agg)
+    return { message: "new goal",goal: g[0]};
   }
 );
 // @desc: update a goal
 // @para :
 // @return: goal list
 
-const funcUpdateAGoal = asyncHandler(async (id, goal_minute, type) => {
-  if (!mongoose.isValidObjectId(id) || !Number(goal_minute) || !type) {
+const funcUpdateAGoal = asyncHandler(async (id,player=undefined,match=undefined, goal_minute, type) => {
+  if ( !Number(goal_minute) || !type) {
     return { error: "Missing or Invalid input" };
   }
   // check exists
-  const goal = await Goal.findById(id);
+  let goal = undefined;
+  let findPlayer = await funcPlayerFind(player);
+  let findMatch = await funcClubFind(match);
+
+  if (mongoose.isValidObjectId(id)) {
+    goal = await Goal.findById(new mongoose.Types.ObjectId(id));
+  }
+  if (!goal) {
+    if (!findPlayer || !findMatch) {
+      throw new Error("Missing or Invalid input");
+      return { error: "Missing or Invalid input" };
+    }
+    goal = await Goal.findOne({
+      player: findPlayer._id,
+      match: findMatch._id,
+    });
+  }
+  // const goal = await Goal.findById(id);
   if (!goal) {
     return { error: "goal not exist" };
   }
@@ -174,7 +246,10 @@ const funcUpdateAGoal = asyncHandler(async (id, goal_minute, type) => {
       new: true,
     }
   );
-  return { message: "updated", goal: UpdateItem };
+  let agg = [...populate_goal];
+  agg.unshift({$match:{_id:UpdateItem._id}})
+  const g = await Goal.aggregate(agg)
+  return { message: "updated", goal: g[0] };
 });
 // @desc: delete a goal
 // @para :

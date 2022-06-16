@@ -15,7 +15,7 @@ const {
 
 // const { protect } = require("../middleware/authMiddleware");
 
-router.route("/").post(createAMatch);
+router.route("/").post(createAMatch).put(updateAMatch).delete(deleteAMatch);
 router.route("/search").post(searchMatches);
 router.route("/:id").get(getAMatch).put(updateAMatch).delete(deleteAMatch);
 

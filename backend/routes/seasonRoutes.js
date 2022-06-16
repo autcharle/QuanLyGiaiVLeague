@@ -25,7 +25,7 @@ const {
 // const { protect } = require("../middleware/authMiddleware");
 
 //// >>>> seasons
-router.route("/").get(getSeason).post(createSeason);
+router.route("/").get(getSeason).post(createSeason).put(updateSeason).delete(deleteSeason);
 router.route("/:id").get(getASeason).put(updateSeason).delete(deleteSeason);
 router.route("/search").post(findSeason)
 

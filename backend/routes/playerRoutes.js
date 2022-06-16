@@ -11,7 +11,7 @@ const {
 
 // const { protect } = require("../middleware/authMiddleware");
 
-router.route("/").get(getPlayers).post(createPlayer);
+router.route("/").get(getPlayers).post(createPlayer).put(updatePlayer).delete(deletePlayer);
 
 router.route("/:id").get(getAPlayer).put(updatePlayer).delete(deletePlayer);
 

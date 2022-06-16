@@ -23,7 +23,9 @@ const {
   SearchPlayer,
   UpdateAPlayer,
 } = require("../services/playerServices");
-
+const {
+  funcUserFind,
+} = require("../services/userServices");
 const mongoose = require("mongoose");
 
 // >>>>>>>>>>>>>>>>>>>>> Pure club {
@@ -38,8 +40,10 @@ const createClub = asyncHandler(async (req, res) => {
     res.status(400);
     throw new Error("Please add a text field");
   }
+
   // check exists
   const existedClubs = await funcSearchExistClub(user, name, stadium);
+
   if (existedClubs.length != 0) {
     res.status(400).json({
       error: "manager or name or stadium existed in other club",
@@ -47,6 +51,7 @@ const createClub = asyncHandler(async (req, res) => {
     });
     return;
   }
+
   // create club
   const club = await funcCreateAClub(user, name, stadium);
   res.status(200).json( club );
@@ -64,7 +69,8 @@ const getClubs = asyncHandler(async (req, res) => {
 // @route   GET /api/clubs/:id
 // @access  Public
 const getAClub = asyncHandler(async (req, res) => {
-  const club = await funcGetAClub(req.params.id);
+  const id = req.params.id
+  const club = await funcGetAClub(id);
   res.status(200).json(club);
 });
 
@@ -81,13 +87,21 @@ const findClubs = asyncHandler(async (req, res) => {
   res.status(200).json(existedClubs);
 });
 // @desc    Update season
-// @route   PUT /api/seasons:id
+// @route   PUT /api/seasons/:id  | /api/seasons
 // @access  Public
 const updateClub = asyncHandler(async (req, res) => {
   // check exist
-  const club = await funcGetAClub(req.params.id);
-  if (!club) {
-    res.status(400);
+  const clubname = req.body.id ? req.body.id : req.body.name
+  const id = req.params.id ? req.params.id : clubname
+
+  if (!id)
+  {
+    res.status(400).json({ error: "missing input", existed });
+    throw new Error("missing input")
+  }
+  const club = await funcGetAClub(id);
+  if (!club || club.error) {
+    res.status(400).json({error:"Club not existed"});
     throw new Error("Club not existed");
   }
   const { user, name, stadium } = req.body;
@@ -95,36 +109,47 @@ const updateClub = asyncHandler(async (req, res) => {
     user = club.user;
   }
   if (!name) {
-    user = club.name;
+    name = club.name;
   }
   if (!stadium) {
-    user = club.stadium;
+    stadium = club.stadium;
   }
+
   // check input value
-  const existedValue = await funcSearchExistClub(user, name, stadium);
+  const manager = await funcUserFind(user)
+  if (!manager || (manager && manager.role != 'manager')){
+    res.status(400).json({error:"manager not existed"});
+    throw new Error("manager not existed");
+  }
+  const existedValue = await funcSearchExistClub(manager._id, name, stadium);
   const existed = existedValue.filter((i) => {
     return club._id.toString() != i._id.toString();
   });
 
   if (existed.length > 0) {
+    // throw new Error("value existed")
     res.status(400).json({ error: "value existed", existed });
+    throw new Error("value existed")
     return;
   }
   // update
   const updateValue = {
-    user: user,
+    user: manager._id,
     name: name,
     stadium: stadium,
   };
-  const updatedItem = await funcUpdateAClub(req.params.id, updateValue);
+
+  const updatedItem = await funcUpdateAClub(id, updateValue);
   // res.status(200).json(updatedItem);
   res.status(200).json({ message: "updateClub", club:updatedItem });
 });
 // @desc    Delete season
-// @route   DELETE /api/seasons:id
+// @route   DELETE /api/seasons/:id | /api/seasons/:id
 // @access  Public
 const deleteClub = asyncHandler(async (req, res) => {
-  const result = await funcDeleteAClub(req.params.id);
+  const clubname = req.body.id ? req.body.id : req.body.name
+  const id = req.params.id ? req.params.id : clubname
+  const result = await funcDeleteAClub(id);
   res.status(200).json(result);
 });
 // } Pure club <<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -135,15 +160,13 @@ const deleteClub = asyncHandler(async (req, res) => {
 // @access  Public
 const getPlayersInClub = asyncHandler(async (req, res) => {
   const club = req.params.id;
-  const { name, dob, type } = req.body;
+  // const { name, dob, type } = req.body;
   const result = await SearchPlayer(club, undefined, undefined, undefined);
   if (result.error) {
-    res.status(400);
-    // throw new Error(result.error)
-  } else {
-    res.status(200);
+    res.status(400).json(result);
+    throw new Error(result.error)
   }
-  res.json(result);
+  res.status(200).json(result);
 });
 
 // @desc    create a new player in a club
@@ -154,19 +177,16 @@ const addAPlayerToClub = asyncHandler(async (req, res) => {
   const { name, dob, note, type } = req.body;
   const result = await AddPlayer(club, name, dob, note, type);
   if (result.error) {
-    res.status(400);
-    // throw new Error(result.error)
-  } else {
-    res.status(200);
+    res.status(400).json(result);
+    throw new Error(result.error)
   }
-  res.json(result);
+  res.status(200).json(result);
 });
 
 // @desc    Get a new player in a club by Id
 // @route   GET /:id/players/:playerId
 // @access  Public
 const getAPlayerInClub = asyncHandler(async (req, res) => {
-  console.log("asa");
   const player = await funcGetAPlayer(req.params.playerId);
   res.status(200).json(player);
 });
@@ -179,12 +199,10 @@ const updateAPlayerInClub = asyncHandler(async (req, res) => {
   const club = req.params.id;
   const result = await UpdateAPlayer(playerId, club, name, note, dob, type);
   if (result.error) {
-    res.status(400);
-    // throw new Error(result.error)
-  } else {
-    res.status(200);
+    res.status(400).json(result);
+    throw new Error(result.error)
   }
-  res.json(result);
+  res.status(200).json(result);
 });
 // @desc    Delete a player in a club by Id
 // @route   Put /:id/players/:playerId
@@ -202,12 +220,10 @@ const searchAPlayerInClub = asyncHandler(async (req, res) => {
   const { name, dob, type } = req.body;
   const result = await SearchPlayer(club, name, dob, type);
   if (result.error) {
-    res.status(400);
-    // throw new Error(result.error)
-  } else {
-    res.status(200);
+    res.status(400).json(result);
+    throw new Error(result.error)
   }
-  res.json(result);
+  res.status(200).json(result);
 });
 // } <<<<<<<<<<<<<<<<<<<<<<<<<<
 

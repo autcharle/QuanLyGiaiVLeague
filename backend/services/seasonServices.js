@@ -1,6 +1,24 @@
 const asyncHandler = require("express-async-handler");
+const mongoose = require("mongoose");
 const Season = require("../models/seasonModel");
 
+const funcSeasonFind = asyncHandler(async (id) => {
+  if (!id) return undefined;
+  let byid = undefined;
+  let byname = undefined;
+  if (!mongoose.isValidObjectId(id) && typeof id != "string")
+    throw new Error("Invalid input for search");
+  if (mongoose.isValidObjectId(id)) {
+    newid = new mongoose.Types.ObjectId(id);
+    byid = await Season.findById(newid);
+  }
+  if (typeof id == "string") {
+    byname = await Season.findOne({ name: { $regex: id, $options: "i" } });
+  }
+  if (byid) return byid;
+  if (byname) return byname;
+  return undefined
+});
 // @desc: check if season exists
 // @para : name of the season
 // @return: lists of seasons
@@ -28,7 +46,7 @@ const funcGetAllSeasons = asyncHandler(async () => {
 // @para : id of the season
 // @return: season
 const funcGetASeason = asyncHandler(async (id) => {
-  return await {season : Season.findById(id)};
+  return await funcSeasonFind(id);
 });
 
 // @desc: search a season (similer is enough, use or for attr)
@@ -40,7 +58,7 @@ const funcSearchSeasons = asyncHandler(async (name) => {
   });
 });
 
-// @desc: update a season 
+// @desc: update a season
 // @para : season's id and update value
 // @return: updated season
 const funcUpdateASeason = asyncHandler(async (id, value) => {
@@ -50,16 +68,16 @@ const funcUpdateASeason = asyncHandler(async (id, value) => {
   return updated;
 });
 
-// @desc: delete a season 
-// @para : season's id 
+// @desc: delete a season
+// @para : season's id
 // @return: object result
 const funcDeleteASeason = asyncHandler(async (id) => {
-    const season = await Season.findById(id);
-    if (!season)
-        return {message: 'Season not exists'}
-    await season.remove();
-    return { id: id }
-  });
+  const season = await funcGetASeason(id);
+  if (!season) return { message: "Season not exists" };
+  id = season._id;
+  await season.remove();
+  return { id: id };
+});
 
 module.exports = {
   funcFindSeasonExists,
@@ -69,4 +87,5 @@ module.exports = {
   funcSearchSeasons,
   funcUpdateASeason,
   funcDeleteASeason,
+  funcSeasonFind,
 };

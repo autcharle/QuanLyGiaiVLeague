@@ -26,12 +26,10 @@ const createARanking = asyncHandler(async (req, res) => {
   const club = req.body.club;
   const result = await CreateARanking(season,club)
   if (result.error) {
-    res.status(400);
-    // throw new Error(result.error)
-  } else {
-    res.status(200);
+    res.status(400).json(result);
+    throw new Error(result.error)
   }
-  res.json(result);
+  res.status(200).json(result);
 });
 
 // @desc    Get rankings of a season
@@ -39,44 +37,55 @@ const createARanking = asyncHandler(async (req, res) => {
 // @access  Public
 const getRankingOfASeason = asyncHandler(async (req, res) => {
   const season = req.body.season;
-  const result = await funcSearchRanking(season,undefined)
+  const result = await funcSearchRanking(season,undefined,undefined)
   if (result.error) {
-    res.status(400);
-    // throw new Error(result.error)
-  } else {
-    res.status(200);
+    res.status(400).json(result);
+    throw new Error(result.error)
   }
-  res.json(result);
+  res.status(200).json(result);
 });
 
 // @desc    find rankings
 // @route   POST /api/rankings/search
 // @access  Public
 const findRankings = asyncHandler(async (req, res) => {
-  const {  season, club } = req.body;
-  const result = await funcSearchRanking(season,club)
+  const {  season, club , rank } = req.body;
+  const result = await funcSearchRanking(season,club,rank)
   if (result.error) {
-    res.status(400);
-    // throw new Error(result.error)
-  } else {
-    res.status(200);
+    res.status(400).json(result);
+    throw new Error(result.error)
   }
-  res.json(result);
+  res.status(200).json(result);
 });
 
 // @desc    Delete a ranking for a club of a seasons
 // @route   DELETE /api/id
 // @access  Public
 const deleteAClubRanking = asyncHandler(async (req, res) => {
-  const id = req.params.id
+  
+  let id = req.params.id ? req.params.id : req.body.id
+  if (!id){
+    const {season,club} = req.body
+    if (!season || !club){
+      res.status(400).json("missing select input");
+      throw new Error("missing select input")
+    }
+    const finds = await funcSearchRanking(season,club,undefined)
+    if (finds.length > 1){
+      res.status(400).json("logic system error");
+      throw new Error("logic system error")
+    } else if (finds.length < 1){
+      res.status(400).json("ranking/register not found");
+      throw new Error("ranking/register not found")
+    }
+    id = new mongoose.Types.ObjectId(finds[0]._id)
+  }
   const result = await funcDeleteARanking(id)
   if (result.error) {
-    res.status(400);
-    // throw new Error(result.error)
-  } else {
-    res.status(200);
+    res.status(400).json(result);
+    throw new Error(result.error)
   }
-  res.json(result);
+  res.status(200).json(result);
 });
 // ------------------------->> For register << //
 
@@ -84,17 +93,18 @@ const deleteAClubRanking = asyncHandler(async (req, res) => {
 // @route   POST /api/rankings/register/:seasonId/:clubId"
 // @access  Public
 const getValidatePlayer = asyncHandler(async (req, res) => {
-  const season = req.params.seasonId;
-  const club = req.params.clubId;
+  const season = req.params.seasonId ? req.params.seasonId : req.body.season
+  const club =  req.params.clubId ? req.params.clubId : req.body.club;
+
+  // const season = req.params.seasonId;
+  // const club = req.params.clubId;
 
   const result = await GetValidatePlayer(season,club)
   if (result.error) {
-    res.status(400);
-    // throw new Error(result.error)
-  } else {
-    res.status(200);
+    res.status(400).json(result);
+    throw new Error(result.error)
   }
-  res.json(result);
+  res.status(200).json(result);
 
 });
 
@@ -102,15 +112,13 @@ const getValidatePlayer = asyncHandler(async (req, res) => {
 // @route   POST /api/:id/seasons
 // @access  Public
 const getValidate = asyncHandler(async (req, res) => {
-  const season = req.params.seasonId
+  const season = req.params.seasonId ? req.params.seasonId : req.body.season
   const result = await GetValidateClubWithPlayer(season)
   if (result.error) {
-    res.status(400);
-    // throw new Error(result.error)
-  } else {
-    res.status(200);
+    res.status(400).json(result);
+    throw new Error(result.error)
   }
-  res.json(result);
+  res.status(200).json(result);
 });
 //  For register <<------------------------- //
 
@@ -124,12 +132,10 @@ const getPlayerGoals = asyncHandler(async (req, res) => {
 
   const result = await funcSumGoalOfPlayers(season)
   if (result.error) {
-    res.status(400);
-    // throw new Error(result.error)
-  } else {
-    res.status(200);
+    res.status(400).json(result);
+    throw new Error(result.error)
   }
-  res.json(result);
+  res.status(200).json(result);
 
 });
 

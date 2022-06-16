@@ -11,6 +11,7 @@ const {
   AddPlayer,
   SearchPlayer,
   UpdateAPlayer,
+  funcPlayerFind,
 } = require("../services/playerServices");
 
 // @desc    Create new player
@@ -24,12 +25,10 @@ const createPlayer = asyncHandler(async (req, res) => {
   }
   const result = await AddPlayer(club, name, dob, note, type);
   if (result.error) {
-    res.status(400);
-    // throw new Error(result.error)
-  } else {
-    res.status(200);
+    res.status(400).json(result);
+    throw new Error(result.error);
   }
-  res.json(result);
+  res.status(200).json(result);
 });
 
 // @desc    Get players
@@ -52,15 +51,13 @@ const getAPlayer = asyncHandler(async (req, res) => {
 // @route   POST /api/players/search
 // @access  Public
 const findPlayers = asyncHandler(async (req, res) => {
-  const { club, name, dob, type } = req.body;
+  const { club, dob, name ,type } = req.body;
   const result = await SearchPlayer(club, name, dob, type);
   if (result.error) {
-    res.status(400);
-    // throw new Error(result.error)
-  } else {
-    res.status(200);
+    res.status(400).json(result);
+    throw new Error(result.error);
   }
-  res.json(result);
+  res.status(200).json(result);
 });
 
 // @desc    Update player
@@ -68,9 +65,10 @@ const findPlayers = asyncHandler(async (req, res) => {
 // @access  Public
 const updatePlayer = asyncHandler(async (req, res) => {
   const { club, name, dob, note, type } = req.body;
-  const playerId = req.params.id;
+  const playername = req.body.id ? req.body.id : req.body.name
+  const id = req.params.id ? req.params.id : playername
 
-  const result = await UpdateAPlayer(playerId, club, name, note, dob, type);
+  const result = await UpdateAPlayer(id, club, name, note, dob, type);
   if (result.error) {
     res.status(400);
   } else {
@@ -83,7 +81,9 @@ const updatePlayer = asyncHandler(async (req, res) => {
 // @route   DELETE /api/players:id
 // @access  Public
 const deletePlayer = asyncHandler(async (req, res) => {
-  const result = await funcDeleteAPlayer(req.params.id);
+  const playername = req.body.id ? req.body.id : req.body.name
+  const id = req.params.id ? req.params.id : playername
+  const result = await funcDeleteAPlayer(id);
   res.status(200).json(result);
 });
 
