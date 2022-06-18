@@ -2,8 +2,17 @@
 Đồ án cuối kỳ của Group 11_CNPM
 
 Final Project of Group 11_Introducing to Software Engineering
+## Giới thiệu tổng quan
 
-Hướng dẫn lần đầu:
+Hệ thống chúng tôi xây dựng là một trang web phân hệ người dùng với mục đích quản lý giải đấu vô địch bóng đá quốc gia.
+- Người dùng thuộc phân hệ guest khi truy cập trang web có thể xem các thông tin về cầu thủ, lịch thi đấu, thông số giải đấu…
+- Người dùng thuộc phân hệ quản lý đội bóng khi truy cập trang web có thể nộp đơn đăng ký đội bóng.
+- Người dùng thuộc phân hệ ban tổ chức khi truy cập trang web có thể duyệt đơn đăng ký đội bóng, lập lịch thi đấu và cập nhật thông số giải đấu.
+
+## Link video demo:
+https://drive.google.com/drive/folders/1dyy43yLfeOGtMvFw63_P2J1pp1jpzEJ1?usp=sharing
+
+## Hướng dẫn lần đầu:
 
 - 1_ Lập trình trên Visual Studio Code
 
