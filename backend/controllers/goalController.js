@@ -54,8 +54,9 @@ const searchGoals = asyncHandler(async (req, res) => {
 
 const updateAGoal = asyncHandler(async (req, res) => {
   const id = req.params.id;
-  const { goal_minute, type } = req.body;
-  const result = await funcUpdateAGoal(id, goal_minute, type);
+  const { player,match,goal_minute, type } = req.body;
+  console.log(goal_minute, type)
+  const result = await funcUpdateAGoal(id,player,match ,goal_minute, type);
 
   if (result.error) {
     res.status(400).json(result);

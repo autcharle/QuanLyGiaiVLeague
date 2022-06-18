@@ -349,7 +349,9 @@ const funcCalcRankingGoalDiffence = asyncHandler(async (id, season) => {
     {
       $facet: {
         home_club: [
-          { $match: { home_club: id } },
+          // missing compare season
+          { $match: { $and:[{home_club: id,season:season}] } },
+          // { $match: { home_club: id } },
           {
             $group: {
               _id: "$home_club",
