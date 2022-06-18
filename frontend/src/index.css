@@ -213,3 +213,22 @@ h3 {
     font-size: 1.5rem;
   }
 }
+
+.info-container {
+
+  border-color: #828282;
+  border-style: solid;
+  border-width: thin;
+
+  box-shadow: 0 3px 10px rgb(0 0 0 / 0.2);
+  border-radius: 5px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  text-align: left;
+
+  font-size: medium;
+}
+
+.info-text-container{
+  background-color: green;
+}

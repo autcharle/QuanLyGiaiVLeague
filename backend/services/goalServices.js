@@ -331,9 +331,10 @@ const funcSumGoalOfPlayers = asyncHandler(async (season) => {
     {
       $project: {
         _id: 0,
-        // "id": "$player._id",
+        "id": "$player._id",
         name: "$player.name",
         club: "$club._id",
+        clubname: "$club.name",
         type: "$player.type",
         goals: "$count",
       },

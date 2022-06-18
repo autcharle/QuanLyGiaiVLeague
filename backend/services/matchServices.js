@@ -42,6 +42,7 @@ const populate_match = [
   },
   { $unwind: "$away_club" },
   { $addFields: { away_club: "$away_club._id", awayname: "$away_club.name" } },
+  { $sort: { round: 1 } },
 ];
 
 // @desc: search Match

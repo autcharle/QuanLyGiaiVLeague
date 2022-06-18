@@ -36,7 +36,9 @@ function Navibar() {
               <Link to="/seasons" className="nav-link">
                 Seasons
               </Link>
-
+              <Link to="/clubs" className="nav-link">
+                Clubs
+              </Link>
               {/* <Nav.Link href="#action2">Link</Nav.Link>
             <NavDropdown title="Link" id="navbarScrollingDropdown">
               <NavDropdown.Item href="#action3">Action</NavDropdown.Item>
